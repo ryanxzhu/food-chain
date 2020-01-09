@@ -1,0 +1,64 @@
+body {
+	margin: 0;
+	font-family: 'Work Sans', sans-serif;
+}
+
+canvas {
+	width: 100%;
+	height: 400px;
+	background: rgb(255, 203, 124);
+}
+
+#controls {
+	display: flex;
+	justify-content: space-around;
+	background: beige;
+}
+
+.playerInputs {
+	display: inline-block;
+	padding-top: 12px;
+}
+
+h2 {
+	text-align: center;
+	margin: 0;
+}
+
+input[type="range"] {
+	outline: 0;
+	border: 0;
+	border-radius: 500px;
+	width: 300px;
+	max-width: 100%;
+	margin: 16px 0 16px;
+	transition: box-shadow 0.2s ease-in-out;
+}
+
+input[type="range"] {
+	overflow: hidden;
+	height: 20px;
+	-webkit-appearance: none;
+	background-color: #ddd;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+	height: 20px;
+	-webkit-appearance: none;
+	color: #444;
+	transition: box-shadow 0.2s ease-in-out;
+}
+input[type="range"]::-webkit-slider-thumb {
+	width: 20px;
+	-webkit-appearance: none;
+	height: 20px;
+	cursor: ew-resize;
+	background: #fff;
+	box-shadow: -330px 0 0 320px #1597ff, inset 0 0 0 40px #1597ff;
+	border-radius: 50%;
+	transition: box-shadow 0.2s ease-in-out;
+	position: relative;
+}
+input[type="range"]:active::-webkit-slider-thumb {
+	background: #fff;
+	box-shadow: -330px 0 0 320px #1597ff, inset 0 0 0 3px #1597ff;
+}
