@@ -1,7 +1,13 @@
 const canvas = document.querySelector('canvas');
 const controlsSection = document.querySelector('#controls');
 const sunlightSlider = document.querySelector('#sunlightSlider');
-canvas.style.height = window.innerHeight - parseFloat(controlsSection.style.height) + 'px';
+const worldSpeedSlider = document.querySelector('#worldSpeedSlider');
+const h4Container = document.querySelector('#h4-container');
+const h4 = document.querySelector('h4');
+controlsSection.style.height = '95px';
+canvas.style.height = (window.innerHeight - parseFloat(controlsSection.style.height)) * 0.99 + 'px';
+const gameSpeedArray = [ 1, 2, 3, 4 ];
+var gameSpeed = gameSpeedArray[0];
 
 var rgb = {
 	r: 0,
@@ -92,9 +98,15 @@ for (let i = 0; i < brownColorArray.length; i++) {
 		'rgb(' + brownColorArray[i].r + ', ' + brownColorArray[i].g + ', ' + brownColorArray[i].b + ')';
 }
 
-console.log(brownColorArray);
 canvas.style.backgroundColor = brownColorArray[50];
 
 sunlightSlider.addEventListener('input', function() {
 	canvas.style.backgroundColor = brownColorArray[this.value];
+});
+
+h4Container.style.left = '0px';
+worldSpeedSlider.addEventListener('input', function() {
+	h4Container.style.left = parseFloat(this.value) * 93.5 + 'px';
+	gameSpeed = gameSpeedArray[this.value];
+	h4.innerHTML = gameSpeed + 'x' + '<span></span>';
 });
