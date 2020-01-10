@@ -8,55 +8,10 @@ const h4 = document.querySelector('h4');
 const gameSpeedArray = [ 1, 2, 3, 4 ];
 var gameSpeed = gameSpeedArray[0];
 var mouse = {
-	x: -200,
+	x: 200,
 	y: 200
 };
-
-init();
-
-animate();
-
-// initilisation function
-function init() {
-	controlsSection.style.height = '95px';
-
-	canvas.width = innerWidth;
-	canvas.height = innerHeight;
-
-	const brownColorArray = createBrownArray();
-
-	canvas.style.backgroundColor = brownColorArray[50];
-
-	// Event Listeners for sunlight and work speed range input
-	sunlightSlider.addEventListener('input', function() {
-		canvas.style.backgroundColor = brownColorArray[this.value];
-	});
-
-	h4Container.style.left = '0px';
-	worldSpeedSlider.addEventListener('input', function() {
-		h4Container.style.left = parseFloat(this.value) * 93.5 + 'px';
-		gameSpeed = gameSpeedArray[this.value];
-		h4.innerHTML = gameSpeed + 'x' + '<span></span>';
-	});
-
-	// Basic Event Listeners
-	addEventListener('mousemove', function(e) {
-		mouse.x = e.x;
-		mouse.y = e.y;
-
-		// Hover down menu due to mouse moved to the top of the screen
-		if (mouse.y < 100) {
-			controlsSection.style.transform = 'translateY(100px)';
-		} else {
-			controlsSection.style.transform = 'translateY(0px)';
-		}
-	});
-
-	addEventListener('resize', function() {
-		canvas.width = innerWidth;
-		canvas.height = innerHeight;
-	});
-}
+let greenae;
 
 //Utility Functions
 
@@ -174,18 +129,86 @@ function createBrownArray() {
 	return brownColorArray;
 }
 
+// Objects
+class Organism {
+	constructor(x, y, size, color) {
+		this.x = x;
+		this.y = y;
+		this.size = size;
+		this.color = color;
+		this.velocity = Math.random() * 5;
+		this.angle = Math.random() * 2 * Math.PI;
+	}
+
+	draw() {
+		c.beginPath();
+		c.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+		c.fillStyle = this.color;
+		c.fill();
+		c.stroke();
+	}
+	update() {
+		this.draw();
+		this.x = mouse.x;
+		this.y = mouse.y;
+	}
+}
+
+// initilisation function
+function init() {
+	greenae = new Organism(mouse.x, mouse.y, 20, 'black');
+
+	controlsSection.style.height = '95px';
+
+	canvas.width = innerWidth;
+	canvas.height = innerHeight;
+
+	const brownColorArray = createBrownArray();
+
+	canvas.style.backgroundColor = brownColorArray[50];
+
+	// Event Listeners for sunlight and work speed range input
+	sunlightSlider.addEventListener('input', function() {
+		canvas.style.backgroundColor = brownColorArray[this.value];
+	});
+
+	h4Container.style.left = '0px';
+	worldSpeedSlider.addEventListener('input', function() {
+		h4Container.style.left = parseFloat(this.value) * 93.5 + 'px';
+		gameSpeed = gameSpeedArray[this.value];
+		h4.innerHTML = gameSpeed + 'x' + '<span></span>';
+	});
+
+	// Basic Event Listeners
+	addEventListener('mousemove', function(e) {
+		mouse.x = e.x;
+		mouse.y = e.y;
+
+		// Hover down menu due to mouse moved to the top of the screen
+		if (mouse.y < 100) {
+			controlsSection.style.transform = 'translateY(100px)';
+		} else {
+			controlsSection.style.transform = 'translateY(0px)';
+		}
+	});
+
+	addEventListener('resize', function() {
+		canvas.width = innerWidth;
+		canvas.height = innerHeight;
+	});
+}
+
 //Animation loop
 function animate() {
 	requestAnimationFrame(animate);
 
 	c.clearRect(0, 0, canvas.width, canvas.height);
-	c.fillText('mouse', mouse.x, mouse.y);
+
+	c.fillRect(200, 200, 20, 20);
+
+	greenae.update();
 }
 
-// Objects
-function Organism(x, y, size, color) {
-	this.x = x;
-	this.y = y;
-	this.size = size;
-	this.color = color;
-}
+init();
+
+animate();
