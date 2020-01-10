@@ -6,81 +6,30 @@ const worldSpeedSlider = document.querySelector('#worldSpeedSlider');
 const h4Container = document.querySelector('#h4-container');
 const h4 = document.querySelector('h4');
 const gameSpeedArray = [ 1, 2, 3, 4 ];
+var greenaeArray = [];
+const sizesArray = [];
+for (let index = 1; index < 8; index++) {
+	sizesArray.push(5 * Math.sqrt(Math.pow(2, index)));
+}
+console.log(sizesArray);
 var gameSpeed = gameSpeedArray[0];
 var mouse = {
 	x: 200,
 	y: 200
 };
 let greenae;
+let yellowin;
+let redla;
+let blueson;
+let purpleg;
+let blackarr;
+let oranget;
+var count = 0;
 
 //Utility Functions
 
 function randomIntFromRange(min, max) {
 	return Math.floor(Math.random() * (max - min + 1) + min);
-}
-
-function resultantVelocity(xVelocity, yVelocity) {
-	return Math.sqrt(Math.pow(xVelocity, 2) + Math.pow(yVelocity, 2));
-}
-
-function angleOfDirection(xVelocity, yVelocity, resultantVelocity) {
-	if (xVelocity >= 0 && yVelocity >= 0) {
-		return Math.asin(xVelocity / resultantVelocity);
-	}
-	if (xVelocity >= 0 && yVelocity <= 0) {
-		return Math.PI / 2 + Math.acos(xVelocity / resultantVelocity);
-	}
-	if (xVelocity <= 0 && yVelocity <= 0) {
-		return Math.PI + Math.asin(Math.abs(xVelocity) / resultantVelocity);
-	}
-	if (xVelocity <= 0 && yVelocity >= 0) {
-		return Math.PI * 3 / 2 + Math.asin(yVelocity / resultantVelocity);
-	}
-}
-
-function changeAngle(angle) {
-	let random = Math.random();
-	let newAngle = random < 0.5 ? angle + 0.1 : angle - 0.1;
-	newAngle = newAngle < 0 ? Math.PI * 2 + newAngle : newAngle;
-	newAngle = newAngle >= Math.PI * 2 ? newAngle - Math.PI * 2 : newAngle;
-
-	return newAngle;
-}
-
-function findXVelocity(angle, velocity) {
-	if (angle <= Math.PI / 2) {
-		return Math.sin(angle) * velocity;
-	}
-	if (angle <= Math.PI) {
-		angle = angle - Math.PI / 2;
-		return Math.cos(angle) * velocity;
-	}
-	if (angle <= Math.PI * 3 / 2) {
-		angle = angle - Math.PI;
-		return Math.sin(angle) * velocity * -1;
-	}
-	if (angle <= Math.PI * 2) {
-		angle = angle - Math.PI * 3 / 2;
-		return Math.cos(angle) * velocity * -1;
-	}
-}
-
-function findYVelocity(angle, velocity) {
-	if (angle <= Math.PI / 2) {
-		return Math.cos(angle) * velocity;
-	}
-	if (angle <= Math.PI) {
-		angle = angle - Math.PI / 2;
-		return Math.sin(angle) * velocity * -1;
-	}
-	if (angle <= Math.PI * 3 / 2) {
-		angle = angle - Math.PI;
-		return Math.cos(angle) * velocity * -1;
-	}
-	if (angle <= Math.PI * 2) {
-		angle = angle - Math.PI * 3 / 2;
-		return Math.sin(angle) * velocity;
-	}
 }
 
 // creates an array of shades of brown. Used for sunlight range slider
@@ -136,8 +85,73 @@ class Organism {
 		this.y = y;
 		this.size = size;
 		this.color = color;
-		this.velocity = Math.random() * 5;
+		this.velocity = Math.random() * 2;
 		this.angle = Math.random() * 2 * Math.PI;
+		this.xVelocity = 0;
+		this.yVelocity = 0;
+	}
+
+	resultantVelocity(xVelocity, yVelocity) {
+		return Math.sqrt(Math.pow(xVelocity, 2) + Math.pow(yVelocity, 2)) * gameSpeed;
+	}
+
+	angleOfDirection(xVelocity, yVelocity, resultantVelocity) {
+		if (xVelocity >= 0 && yVelocity >= 0) {
+			return Math.asin(xVelocity / resultantVelocity);
+		}
+		if (xVelocity >= 0 && yVelocity <= 0) {
+			return Math.PI / 2 + Math.acos(xVelocity / resultantVelocity);
+		}
+		if (xVelocity <= 0 && yVelocity <= 0) {
+			return Math.PI + Math.asin(Math.abs(xVelocity) / resultantVelocity);
+		}
+		if (xVelocity <= 0 && yVelocity >= 0) {
+			return Math.PI * 3 / 2 + Math.asin(yVelocity / resultantVelocity);
+		}
+	}
+
+	findXVelocity(angle, velocity) {
+		if (angle <= Math.PI / 2) {
+			return Math.sin(angle) * velocity;
+		}
+		if (angle <= Math.PI) {
+			angle = angle - Math.PI / 2;
+			return Math.cos(angle) * velocity;
+		}
+		if (angle <= Math.PI * 3 / 2) {
+			angle = angle - Math.PI;
+			return Math.sin(angle) * velocity * -1;
+		}
+		if (angle <= Math.PI * 2) {
+			angle = angle - Math.PI * 3 / 2;
+			return Math.cos(angle) * velocity * -1;
+		}
+	}
+
+	findYVelocity(angle, velocity) {
+		if (angle <= Math.PI / 2) {
+			return Math.cos(angle) * velocity;
+		}
+		if (angle <= Math.PI) {
+			angle = angle - Math.PI / 2;
+			return Math.sin(angle) * velocity * -1;
+		}
+		if (angle <= Math.PI * 3 / 2) {
+			angle = angle - Math.PI;
+			return Math.cos(angle) * velocity * -1;
+		}
+		if (angle <= Math.PI * 2) {
+			angle = angle - Math.PI * 3 / 2;
+			return Math.sin(angle) * velocity;
+		}
+	}
+
+	changeAngle(angle) {
+		let random = Math.random();
+		angle = random < 0.5 ? angle + 0.1 : angle - 0.1;
+		angle = angle < 0 ? Math.PI * 2 + angle : angle;
+		angle = angle >= Math.PI * 2 ? angle - Math.PI * 2 : angle;
+		return angle;
 	}
 
 	draw() {
@@ -147,16 +161,37 @@ class Organism {
 		c.fill();
 		c.stroke();
 	}
+
 	update() {
+		this.angle = this.changeAngle(this.angle);
+		this.xVelocity = this.findXVelocity(this.angle, this.velocity);
+		this.yVelocity = this.findYVelocity(this.angle, this.velocity);
+		if (this.x + this.size > canvas.width || this.x - this.size < 0) {
+			this.xVelocity = -this.xVelocity;
+		}
+		if (this.y + this.size > canvas.height || this.y - this.size < 0) {
+			this.yVelocity = -this.yVelocity;
+		}
+		this.angle = this.angleOfDirection(this.xVelocity, this.yVelocity, this.velocity);
+		this.x += this.xVelocity;
+		this.y += this.yVelocity;
 		this.draw();
-		this.x = mouse.x;
-		this.y = mouse.y;
 	}
 }
 
 // initilisation function
 function init() {
-	greenae = new Organism(mouse.x, mouse.y, 20, 'black');
+	for (let index = 0; index < 800; index++) {
+		greenaeArray.push(new Organism(innerWidth / 2, innerHeight / 2, sizesArray[0], 'green'));
+	}
+
+	// greenae = new Organism(200, 200, sizesArray[0], 'green');
+	// yellowin = new Organism(300, 300, sizesArray[1], 'yellow');
+	// redla = new Organism(300, 300, sizesArray[2], 'red');
+	// blueson = new Organism(300, 300, sizesArray[3], 'blue');
+	// blackarr = new Organism(300, 300, sizesArray[4], 'black');
+	// oranget = new Organism(300, 300, sizesArray[5], 'orange');
+	// purpleg = new Organism(300, 300, sizesArray[6], 'purple');
 
 	controlsSection.style.height = '95px';
 
@@ -204,9 +239,15 @@ function animate() {
 
 	c.clearRect(0, 0, canvas.width, canvas.height);
 
-	c.fillRect(200, 200, 20, 20);
-
-	greenae.update();
+	for (let index = 0; index < greenaeArray.length; index++) {
+		greenaeArray[index].update();
+	}
+	// yellowin.update();
+	// redla.update();
+	// blueson.update();
+	// blackarr.update();
+	// oranget.update();
+	// purpleg.update();
 }
 
 init();
