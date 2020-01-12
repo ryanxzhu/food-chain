@@ -9,18 +9,22 @@
 </head>
 <body>
     <canvas></canvas>
-    <section id="info">
+    <img class="icon bounce" src="keyboard_arrow_up-24px.svg" id="pauseIcon" alt="pause-svg">
+    <section id="infoBox">
         <h1>Life On Mars</h1>
+    </section>
+    <section id="statusBox">
     </section>
 <section id="controls">
     <div class="playerInputs">
         <h2>Sunlight</h2>
-        <input id="sunlightSlider" type="range" min="0" max="99" value="50">
+        <input id="sunlightSlider" type="range" min="0" max="100" value="50">
+        <div id="h4-container"><h4 id="sunlightPopup">100%<span></span></h4></div>
     </div>
     <div class="playerInputs">
         <h2>Fast Forward</h2>
         <input id="worldSpeedSlider" type="range" min="0" max="3" value="0" step="1">
-        <div id="h4-container"><h4>1x<span></span></h4></div>
+        <div id="h4-container"><h4 id="worldSpeedPopup">1x<span></span></h4></div>
     </div>
 </section>
     <script src="names.js"></script>
