@@ -8,9 +8,11 @@ const h4 = document.querySelector('h4');
 const gameSpeedArray = [ 1, 2, 3, 4 ];
 const sizesArray = [];
 const dietArray = [];
+var count1 = 0;
+var count2 = 0;
 
 for (let index = 0; index < 7; index++) {
-	sizesArray.push(4 * Math.pow(2, index));
+	sizesArray.push(8 * Math.pow(2, index));
 	Math.random() < 0.5 ? dietArray.push('carnivore') : dietArray.push('herbivore');
 }
 
@@ -107,9 +109,11 @@ class Organism {
 		this.lifeSpan = 3000 + Math.floor(Math.random() * 1200);
 		this.death = 0;
 		this.deathSpan = 1000;
-		this.puberty = 1400 + Math.floor(Math.random() * 800);
+		this.puberty = 400 + Math.floor(Math.random() * 800);
 		this.energy = 10000;
 		this.opacity = this.energy / 10000;
+		this.chanceToEvolveBase = 0.01;
+		this.chanceToEvolve = this.chanceToEvolveBase;
 	}
 
 	resultantVelocity(xVelocity, yVelocity) {
@@ -176,6 +180,7 @@ class Organism {
 	}
 
 	draw() {
+		count1++;
 		c.beginPath();
 		c.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
 		if (this.dead === true) {
@@ -198,8 +203,7 @@ class Organism {
 		if (this.dead === true) {
 			this.death = this.death + gameSpeed;
 			if (this.death > this.deathSpan) {
-				greenaeArray.splice(greenaeArray.indexOf(this), 1);
-				yellowinArray.splice(yellowinArray.indexOf(this), 1);
+				this.decompose();
 			}
 			this.draw();
 			return;
@@ -207,13 +211,13 @@ class Organism {
 
 		this.life = this.life + gameSpeed;
 		if (this.life > this.lifeSpan || this.energy < 0) {
-			this.baseVelocity = 0.000000000000000000000000000000000000001;
+			this.baseVelocity = 0.0000000000000000000000000001;
 			this.dead = true;
 		}
 
 		// energy loss
 		this.energy = this.energy - this.energyLoss;
-		this.opacity = this.energy / 10000;
+		this.opacity = Math.max(this.energy / 10000, 0);
 
 		// movement
 		this.velocity = this.baseVelocity * gameSpeed;
@@ -230,10 +234,12 @@ class Organism {
 		this.x += this.xVelocity;
 		this.y += this.yVelocity;
 
-		// breeding
+		// breeding and evolving
 		this.chanceToBreed = this.chanceToBreedBase * gameSpeed;
+		this.chanceToEvolve = this.chanceToEvolveBase * gameSpeed;
 		if (this.life > this.puberty && Math.random() < this.chanceToBreed && this.name === 'greenae') {
-			greenaeArray.push(new Greenae(this.x, this.y, Math.random() * 0.1));
+			this.evolve();
+			greenaeArray.push(new Greenae(this.x, this.y, Math.random() * 0.4));
 		}
 		if (this.life > this.puberty && this.life % 100 < 10 && this.name === 'yellowin' && this.energy > 10000) {
 			yellowinArray.push(new Yellowin(this.x, this.y, this.velocity * (1 + (Math.random() - 0.5) / 2.5)));
@@ -255,6 +261,17 @@ class Greenae extends Organism {
 		this.chanceToBreedBase = 0.004;
 		this.chanceToBreed = this.chanceToBreedBase;
 	}
+
+	evolve() {
+		if (Math.random() < this.chanceToEvolve) {
+			yellowinArray.push(new Yellowin(this.x, this.y, Math.random() * initialVelocity));
+		}
+	}
+
+	decompose() {
+		console.log('decompose greenae');
+		greenaeArray.splice(greenaeArray.indexOf(this), 1);
+	}
 }
 class Yellowin extends Organism {
 	constructor(x, y, baseVelocity) {
@@ -263,7 +280,12 @@ class Yellowin extends Organism {
 		this.size = sizesArray[1];
 		this.diet = 'herbivore';
 		this.color = 'yellow';
-		this.energyLoss = 1 + 3 * Math.pow(this.baseVelocity, 2) * this.size;
+		this.energyLoss = 1 + 6 * Math.pow(this.baseVelocity, 2) * this.size;
+	}
+
+	decompose() {
+		console.log('decompose yellowin');
+		yellowinArray.splice(yellowinArray.indexOf(this), 1);
 	}
 }
 
@@ -274,25 +296,25 @@ function init() {
 	canvas.width = innerWidth;
 	canvas.height = innerHeight;
 
-	for (let index = 0; index < 100; index++) {
+	for (let index = 0; index < 10; index++) {
 		greenaeArray.push(
 			new Greenae(
 				randomIntFromRange(sizesArray[0] * 2, canvas.width - sizesArray[0] * 2),
 				randomIntFromRange(sizesArray[0] * 2, canvas.height - sizesArray[0] * 2),
-				Math.random() * 0.1
+				Math.random() * 0.4
 			)
 		);
 	}
 
-	for (let index = 0; index < 10; index++) {
-		yellowinArray.push(
-			new Yellowin(
-				randomIntFromRange(sizesArray[1] * 2, canvas.width - sizesArray[1] * 2),
-				randomIntFromRange(sizesArray[1] * 2, canvas.height - sizesArray[1] * 2),
-				Math.random() * initialVelocity
-			)
-		);
-	}
+	// for (let index = 0; index < 10; index++) {
+	// 	yellowinArray.push(
+	// 		new Yellowin(
+	// 			randomIntFromRange(sizesArray[1] * 2, canvas.width - sizesArray[1] * 2),
+	// 			randomIntFromRange(sizesArray[1] * 2, canvas.height - sizesArray[1] * 2),
+	// 			Math.random() * initialVelocity
+	// 		)
+	// 	);
+	// }
 
 	const brownColorArray = createBrownArray();
 
@@ -348,12 +370,13 @@ function animate() {
 			continue;
 		}
 		for (let j = 0; j < greenaeArray.length; j++) {
+			count2++;
 			if (
 				getDistance(greenaeArray[j].x, greenaeArray[j].y, yellowinArray[i].x, yellowinArray[i].y) <
 				greenaeArray[j].size + yellowinArray[i].size
 			) {
 				greenaeArray.splice(j, 1);
-				yellowinArray[i].energy = yellowinArray[i].energy + 10000;
+				yellowinArray[i].energy = yellowinArray[i].energy + 4000;
 			}
 		}
 	}
