@@ -7,14 +7,20 @@ const h4Container = document.querySelector('#h4-container');
 const h4 = document.querySelector('h4');
 const gameSpeedArray = [ 1, 2, 3, 4 ];
 const sizesArray = [];
+const dietArray = [];
+
 for (let index = 0; index < 7; index++) {
-	sizesArray.push(1 * Math.pow(2, index));
+	sizesArray.push(4 * Math.pow(2, index));
+	Math.random() < 0.5 ? dietArray.push('carnivore') : dietArray.push('herbivore');
 }
+
 var gameSpeed = gameSpeedArray[0];
 var mouse = {
 	x: 200,
 	y: 200
 };
+
+var initialVelocity = 1;
 
 var greenaeArray = [];
 var yellowinArray = [];
@@ -25,7 +31,6 @@ let blueson;
 let purpleg;
 let blackarr;
 let oranget;
-var count = 0;
 
 //Utility Functions
 
@@ -84,17 +89,27 @@ function createBrownArray() {
 }
 
 // Objects
+
 class Organism {
-	constructor(x, y, size, color) {
+	constructor(x, y, baseVelocity) {
 		this.x = x;
 		this.y = y;
-		this.size = size;
-		this.color = color;
-		this.baseVelocity = Math.random() * 0.2;
+		this.name;
+		this.size;
+		this.color;
+		this.baseVelocity = baseVelocity;
 		this.velocity = this.baseVelocity;
 		this.angle = Math.random() * 2 * Math.PI;
 		this.xVelocity = 0;
 		this.yVelocity = 0;
+		this.dead = false;
+		this.life = 0;
+		this.lifeSpan = 3000 + Math.floor(Math.random() * 1200);
+		this.death = 0;
+		this.deathSpan = 1000;
+		this.puberty = 1400 + Math.floor(Math.random() * 800);
+		this.energy = 10000;
+		this.opacity = this.energy / 10000;
 	}
 
 	resultantVelocity(xVelocity, yVelocity) {
@@ -163,12 +178,44 @@ class Organism {
 	draw() {
 		c.beginPath();
 		c.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
-		c.fillStyle = this.color;
-		c.fill();
-		c.stroke();
+		if (this.dead === true) {
+			c.strokeStyle = this.color;
+			c.stroke();
+		} else {
+			c.fillStyle = this.color;
+			c.save();
+			c.globalAlpha = this.opacity;
+			c.fill();
+
+			c.strokeStyle = 'black';
+			c.stroke();
+			c.restore();
+		}
 	}
 
 	update() {
+		// life and death
+		if (this.dead === true) {
+			this.death = this.death + gameSpeed;
+			if (this.death > this.deathSpan) {
+				greenaeArray.splice(greenaeArray.indexOf(this), 1);
+				yellowinArray.splice(yellowinArray.indexOf(this), 1);
+			}
+			this.draw();
+			return;
+		}
+
+		this.life = this.life + gameSpeed;
+		if (this.life > this.lifeSpan || this.energy < 0) {
+			this.baseVelocity = 0.000000000000000000000000000000000000001;
+			this.dead = true;
+		}
+
+		// energy loss
+		this.energy = this.energy - this.energyLoss;
+		this.opacity = this.energy / 10000;
+
+		// movement
 		this.velocity = this.baseVelocity * gameSpeed;
 		this.angle = this.changeAngle(this.angle);
 		this.xVelocity = this.findXVelocity(this.angle, this.velocity);
@@ -182,7 +229,41 @@ class Organism {
 		this.angle = this.angleOfDirection(this.xVelocity, this.yVelocity, this.velocity);
 		this.x += this.xVelocity;
 		this.y += this.yVelocity;
+
+		// breeding
+		this.chanceToBreed = this.chanceToBreedBase * gameSpeed;
+		if (this.life > this.puberty && Math.random() < this.chanceToBreed && this.name === 'greenae') {
+			greenaeArray.push(new Greenae(this.x, this.y, Math.random() * 0.1));
+		}
+		if (this.life > this.puberty && this.life % 100 < 10 && this.name === 'yellowin' && this.energy > 10000) {
+			yellowinArray.push(new Yellowin(this.x, this.y, this.velocity * (1 + (Math.random() - 0.5) / 2.5)));
+			this.energy = this.energy - 8000;
+		}
+
+		// draw
 		this.draw();
+	}
+}
+
+class Greenae extends Organism {
+	constructor(x, y, baseVelocity) {
+		super(x, y, baseVelocity);
+		this.name = 'greenae';
+		this.size = sizesArray[0];
+		this.color = 'rgb(24, 222, 84)';
+		this.energyLoss = 0;
+		this.chanceToBreedBase = 0.004;
+		this.chanceToBreed = this.chanceToBreedBase;
+	}
+}
+class Yellowin extends Organism {
+	constructor(x, y, baseVelocity) {
+		super(x, y, baseVelocity);
+		this.name = 'yellowin';
+		this.size = sizesArray[1];
+		this.diet = 'herbivore';
+		this.color = 'yellow';
+		this.energyLoss = 1 + 3 * Math.pow(this.baseVelocity, 2) * this.size;
 	}
 }
 
@@ -193,27 +274,22 @@ function init() {
 	canvas.width = innerWidth;
 	canvas.height = innerHeight;
 
-	const yellowSize = 2;
-	const greenaeSize = 1;
-
-	for (let index = 0; index < 400; index++) {
+	for (let index = 0; index < 100; index++) {
 		greenaeArray.push(
-			new Organism(
-				randomIntFromRange(sizesArray[greenaeSize] * 2, canvas.width - sizesArray[greenaeSize] * 2),
-				randomIntFromRange(sizesArray[greenaeSize] * 2, canvas.height - sizesArray[greenaeSize] * 2),
-				sizesArray[greenaeSize],
-				'rgb(73,235,52)'
+			new Greenae(
+				randomIntFromRange(sizesArray[0] * 2, canvas.width - sizesArray[0] * 2),
+				randomIntFromRange(sizesArray[0] * 2, canvas.height - sizesArray[0] * 2),
+				Math.random() * 0.1
 			)
 		);
 	}
 
 	for (let index = 0; index < 10; index++) {
 		yellowinArray.push(
-			new Organism(
-				randomIntFromRange(sizesArray[yellowSize] * 2, canvas.width - sizesArray[yellowSize] * 2),
-				randomIntFromRange(sizesArray[yellowSize] * 2, canvas.height - sizesArray[yellowSize] * 2),
-				sizesArray[yellowSize],
-				'yellow'
+			new Yellowin(
+				randomIntFromRange(sizesArray[1] * 2, canvas.width - sizesArray[1] * 2),
+				randomIntFromRange(sizesArray[1] * 2, canvas.height - sizesArray[1] * 2),
+				Math.random() * initialVelocity
 			)
 		);
 	}
@@ -225,6 +301,9 @@ function init() {
 	// Event Listeners for sunlight and work speed range input
 	sunlightSlider.addEventListener('input', function() {
 		canvas.style.backgroundColor = brownColorArray[this.value];
+		for (let index = 0; index < greenaeArray.length; index++) {
+			greenaeArray[index].chanceToBreed = 0.001 * this.value / 50;
+		}
 	});
 
 	h4Container.style.left = '0px';
@@ -262,13 +341,19 @@ function animate() {
 	yellowinArray.forEach((e) => e.update());
 	greenaeArray.forEach((e) => e.update());
 
+	console.log(yellowinArray.length, greenaeArray.length);
+
 	for (var i = 0; i < yellowinArray.length; i++) {
+		if (yellowinArray[i].dead === true || yellowinArray[i].energy > 20000) {
+			continue;
+		}
 		for (let j = 0; j < greenaeArray.length; j++) {
 			if (
 				getDistance(greenaeArray[j].x, greenaeArray[j].y, yellowinArray[i].x, yellowinArray[i].y) <
 				greenaeArray[j].size + yellowinArray[i].size
 			) {
 				greenaeArray.splice(j, 1);
+				yellowinArray[i].energy = yellowinArray[i].energy + 10000;
 			}
 		}
 	}
