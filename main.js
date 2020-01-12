@@ -1,4 +1,5 @@
 const canvas = document.querySelector('canvas');
+const infoBox = document.querySelector('#info');
 const c = canvas.getContext('2d');
 const controlsSection = document.querySelector('#controls');
 const sunlightSlider = document.querySelector('#sunlightSlider');
@@ -8,8 +9,7 @@ const h4 = document.querySelector('h4');
 const gameSpeedArray = [ 1, 2, 3, 4 ];
 const sizesArray = [];
 const dietArray = [];
-var count1 = 0;
-var count2 = 0;
+var nameCount = 0;
 
 for (let index = 0; index < 7; index++) {
 	sizesArray.push(8 * Math.pow(2, index));
@@ -17,6 +17,7 @@ for (let index = 0; index < 7; index++) {
 }
 
 var gameSpeed = gameSpeedArray[0];
+var sunlightFraction = 1;
 var mouse = {
 	x: 200,
 	y: 200
@@ -96,8 +97,9 @@ class Organism {
 	constructor(x, y, baseVelocity) {
 		this.x = x;
 		this.y = y;
-		this.name;
-		this.size;
+		this.name = namesArray[nameCount];
+		nameCount++;
+		this.adultSize;
 		this.color;
 		this.baseVelocity = baseVelocity;
 		this.velocity = this.baseVelocity;
@@ -105,13 +107,12 @@ class Organism {
 		this.xVelocity = 0;
 		this.yVelocity = 0;
 		this.dead = false;
-		this.life = 0;
+		this.life = 1;
+		this.puberty = 400 + Math.floor(Math.random() * 800);
 		this.lifeSpan = 3000 + Math.floor(Math.random() * 1200);
+		this.size = this.adultSize * Math.min(1, Math.max(0.25, this.life / this.puberty));
 		this.death = 0;
 		this.deathSpan = 1000;
-		this.puberty = 400 + Math.floor(Math.random() * 800);
-		this.energy = 10000;
-		this.opacity = this.energy / 10000;
 		this.chanceToEvolveBase = 0.01;
 		this.chanceToEvolve = this.chanceToEvolveBase;
 	}
@@ -180,22 +181,22 @@ class Organism {
 	}
 
 	draw() {
-		count1++;
 		c.beginPath();
 		c.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
 		if (this.dead === true) {
 			c.strokeStyle = this.color;
 			c.stroke();
-		} else {
-			c.fillStyle = this.color;
-			c.save();
-			c.globalAlpha = this.opacity;
-			c.fill();
-
-			c.strokeStyle = 'black';
-			c.stroke();
-			c.restore();
+			return;
 		}
+
+		c.fillStyle = this.color;
+		c.save();
+		c.globalAlpha = this.opacity;
+		c.fill();
+
+		this.life < this.puberty ? (c.strokeStyle = 'white') : (c.strokeStyle = 'black');
+		c.stroke();
+		c.restore();
 	}
 
 	update() {
@@ -215,7 +216,11 @@ class Organism {
 			this.dead = true;
 		}
 
+		// growth
+		this.size = this.adultSize * Math.min(1, Math.max(0.25, this.life / this.puberty));
+
 		// energy loss
+		this.energyLoss = 1 + 6 * Math.pow(this.velocity, 2) * this.size;
 		this.energy = this.energy - this.energyLoss;
 		this.opacity = Math.max(this.energy / 10000, 0);
 
@@ -235,15 +240,20 @@ class Organism {
 		this.y += this.yVelocity;
 
 		// breeding and evolving
-		this.chanceToBreed = this.chanceToBreedBase * gameSpeed;
+		this.chanceToBreed = this.chanceToBreedBase * gameSpeed * sunlightFraction;
 		this.chanceToEvolve = this.chanceToEvolveBase * gameSpeed;
-		if (this.life > this.puberty && Math.random() < this.chanceToBreed && this.name === 'greenae') {
+		if (this.life > this.puberty && Math.random() < this.chanceToBreed && this.constructor.name === 'Greenae') {
 			this.evolve();
 			greenaeArray.push(new Greenae(this.x, this.y, Math.random() * 0.4));
 		}
-		if (this.life > this.puberty && this.life % 100 < 10 && this.name === 'yellowin' && this.energy > 10000) {
-			yellowinArray.push(new Yellowin(this.x, this.y, this.velocity * (1 + (Math.random() - 0.5) / 2.5)));
-			this.energy = this.energy - 8000;
+		if (
+			this.life > this.puberty &&
+			this.life % 100 < 10 &&
+			this.constructor.name === 'Yellowin' &&
+			this.energy > 10000
+		) {
+			yellowinArray.push(new Yellowin(this.x, this.y, this.velocity * (1 + (Math.random() - 0.5) / 5)));
+			this.energy = this.energy - 5000;
 		}
 
 		// draw
@@ -254,10 +264,9 @@ class Organism {
 class Greenae extends Organism {
 	constructor(x, y, baseVelocity) {
 		super(x, y, baseVelocity);
-		this.name = 'greenae';
-		this.size = sizesArray[0];
+		this.adultSize = sizesArray[0];
 		this.color = 'rgb(24, 222, 84)';
-		this.energyLoss = 0;
+		this.lifeSpan = 1000 + Math.floor(Math.random() * 1200);
 		this.chanceToBreedBase = 0.004;
 		this.chanceToBreed = this.chanceToBreedBase;
 	}
@@ -269,18 +278,19 @@ class Greenae extends Organism {
 	}
 
 	decompose() {
-		console.log('decompose greenae');
 		greenaeArray.splice(greenaeArray.indexOf(this), 1);
 	}
 }
 class Yellowin extends Organism {
 	constructor(x, y, baseVelocity) {
 		super(x, y, baseVelocity);
-		this.name = 'yellowin';
-		this.size = sizesArray[1];
+		this.adultSize = sizesArray[1];
+		this.size = this.adultSize * Math.min(1, Math.max(0.25, this.life / this.puberty));
 		this.diet = 'herbivore';
 		this.color = 'yellow';
-		this.energyLoss = 1 + 6 * Math.pow(this.baseVelocity, 2) * this.size;
+		this.energy = 5000;
+		this.opacity = this.energy / 20000;
+		this.energyLoss = 1 + 6 * Math.pow(this.velocity, 2) * this.size;
 	}
 
 	decompose() {
@@ -293,8 +303,11 @@ class Yellowin extends Organism {
 function init() {
 	controlsSection.style.height = '95px';
 
-	canvas.width = innerWidth;
+	infoBox.style.width = '200px';
+	canvas.width = innerWidth - parseFloat(infoBox.style.width);
 	canvas.height = innerHeight;
+	infoBox.height = innerHeight;
+	console.log(infoBox.style.width);
 
 	for (let index = 0; index < 10; index++) {
 		greenaeArray.push(
@@ -323,9 +336,7 @@ function init() {
 	// Event Listeners for sunlight and work speed range input
 	sunlightSlider.addEventListener('input', function() {
 		canvas.style.backgroundColor = brownColorArray[this.value];
-		for (let index = 0; index < greenaeArray.length; index++) {
-			greenaeArray[index].chanceToBreed = 0.001 * this.value / 50;
-		}
+		sunlightFraction = this.value / 50;
 	});
 
 	h4Container.style.left = '0px';
@@ -349,7 +360,7 @@ function init() {
 	});
 
 	addEventListener('resize', function() {
-		canvas.width = innerWidth;
+		canvas.width = innerWidth - parseFloat(infoBox.style.width);
 		canvas.height = innerHeight;
 	});
 }
@@ -358,25 +369,27 @@ function init() {
 function animate() {
 	requestAnimationFrame(animate);
 
+	if (nameCount > namesArray.length - 1) {
+		nameCount = 0;
+	}
+
 	c.clearRect(0, 0, canvas.width, canvas.height);
 
 	yellowinArray.forEach((e) => e.update());
 	greenaeArray.forEach((e) => e.update());
-
-	console.log(yellowinArray.length, greenaeArray.length);
 
 	for (var i = 0; i < yellowinArray.length; i++) {
 		if (yellowinArray[i].dead === true || yellowinArray[i].energy > 20000) {
 			continue;
 		}
 		for (let j = 0; j < greenaeArray.length; j++) {
-			count2++;
 			if (
 				getDistance(greenaeArray[j].x, greenaeArray[j].y, yellowinArray[i].x, yellowinArray[i].y) <
 				greenaeArray[j].size + yellowinArray[i].size
 			) {
+				yellowinArray[i].energy =
+					yellowinArray[i].energy + 4000 * greenaeArray[j].size / greenaeArray[j].adultSize;
 				greenaeArray.splice(j, 1);
-				yellowinArray[i].energy = yellowinArray[i].energy + 4000;
 			}
 		}
 	}

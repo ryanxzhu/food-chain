@@ -7,6 +7,23 @@ body {
 
 canvas {
 	background-color: rgb(229, 209, 188);
+	position: absolute;
+}
+
+#info {
+	color: white;
+	background-color: rgb(35, 35, 35);
+	width: 200px;
+	height: 100%;
+	position: absolute;
+	right: 0;
+}
+
+h1 {
+	padding: 25px 0;
+	font-size: 1.5em;
+	text-align: center;
+	font-family: 'Courier New', Courier, monospace;
 }
 
 #controls {
