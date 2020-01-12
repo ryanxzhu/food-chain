@@ -6,17 +6,18 @@ const worldSpeedSlider = document.querySelector('#worldSpeedSlider');
 const h4Container = document.querySelector('#h4-container');
 const h4 = document.querySelector('h4');
 const gameSpeedArray = [ 1, 2, 3, 4 ];
-var greenaeArray = [];
 const sizesArray = [];
-for (let index = 1; index < 8; index++) {
-	sizesArray.push(5 * Math.sqrt(Math.pow(2, index)));
+for (let index = 0; index < 7; index++) {
+	sizesArray.push(1 * Math.pow(2, index));
 }
-console.log(sizesArray);
 var gameSpeed = gameSpeedArray[0];
 var mouse = {
 	x: 200,
 	y: 200
 };
+
+var greenaeArray = [];
+var yellowinArray = [];
 let greenae;
 let yellowin;
 let redla;
@@ -30,6 +31,10 @@ var count = 0;
 
 function randomIntFromRange(min, max) {
 	return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+function getDistance(x1, y1, x2, y2) {
+	return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
 }
 
 // creates an array of shades of brown. Used for sunlight range slider
@@ -85,7 +90,8 @@ class Organism {
 		this.y = y;
 		this.size = size;
 		this.color = color;
-		this.velocity = Math.random() * 2;
+		this.baseVelocity = Math.random() * 0.2;
+		this.velocity = this.baseVelocity;
 		this.angle = Math.random() * 2 * Math.PI;
 		this.xVelocity = 0;
 		this.yVelocity = 0;
@@ -163,6 +169,7 @@ class Organism {
 	}
 
 	update() {
+		this.velocity = this.baseVelocity * gameSpeed;
 		this.angle = this.changeAngle(this.angle);
 		this.xVelocity = this.findXVelocity(this.angle, this.velocity);
 		this.yVelocity = this.findYVelocity(this.angle, this.velocity);
@@ -181,22 +188,35 @@ class Organism {
 
 // initilisation function
 function init() {
-	for (let index = 0; index < 800; index++) {
-		greenaeArray.push(new Organism(innerWidth / 2, innerHeight / 2, sizesArray[0], 'green'));
-	}
-
-	// greenae = new Organism(200, 200, sizesArray[0], 'green');
-	// yellowin = new Organism(300, 300, sizesArray[1], 'yellow');
-	// redla = new Organism(300, 300, sizesArray[2], 'red');
-	// blueson = new Organism(300, 300, sizesArray[3], 'blue');
-	// blackarr = new Organism(300, 300, sizesArray[4], 'black');
-	// oranget = new Organism(300, 300, sizesArray[5], 'orange');
-	// purpleg = new Organism(300, 300, sizesArray[6], 'purple');
-
 	controlsSection.style.height = '95px';
 
 	canvas.width = innerWidth;
 	canvas.height = innerHeight;
+
+	const yellowSize = 2;
+	const greenaeSize = 1;
+
+	for (let index = 0; index < 400; index++) {
+		greenaeArray.push(
+			new Organism(
+				randomIntFromRange(sizesArray[greenaeSize] * 2, canvas.width - sizesArray[greenaeSize] * 2),
+				randomIntFromRange(sizesArray[greenaeSize] * 2, canvas.height - sizesArray[greenaeSize] * 2),
+				sizesArray[greenaeSize],
+				'rgb(73,235,52)'
+			)
+		);
+	}
+
+	for (let index = 0; index < 10; index++) {
+		yellowinArray.push(
+			new Organism(
+				randomIntFromRange(sizesArray[yellowSize] * 2, canvas.width - sizesArray[yellowSize] * 2),
+				randomIntFromRange(sizesArray[yellowSize] * 2, canvas.height - sizesArray[yellowSize] * 2),
+				sizesArray[yellowSize],
+				'yellow'
+			)
+		);
+	}
 
 	const brownColorArray = createBrownArray();
 
@@ -239,15 +259,19 @@ function animate() {
 
 	c.clearRect(0, 0, canvas.width, canvas.height);
 
-	for (let index = 0; index < greenaeArray.length; index++) {
-		greenaeArray[index].update();
+	yellowinArray.forEach((e) => e.update());
+	greenaeArray.forEach((e) => e.update());
+
+	for (var i = 0; i < yellowinArray.length; i++) {
+		for (let j = 0; j < greenaeArray.length; j++) {
+			if (
+				getDistance(greenaeArray[j].x, greenaeArray[j].y, yellowinArray[i].x, yellowinArray[i].y) <
+				greenaeArray[j].size + yellowinArray[i].size
+			) {
+				greenaeArray.splice(j, 1);
+			}
+		}
 	}
-	// yellowin.update();
-	// redla.update();
-	// blueson.update();
-	// blackarr.update();
-	// oranget.update();
-	// purpleg.update();
 }
 
 init();
