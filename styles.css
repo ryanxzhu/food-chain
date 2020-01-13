@@ -8,6 +8,7 @@ body {
 canvas {
 	background-color: rgb(229, 209, 188);
 	position: absolute;
+	cursor: pointer;
 }
 
 #infoBox,
@@ -18,6 +19,13 @@ canvas {
 	height: 70%;
 	position: absolute;
 	right: 0;
+	font-family: 'Courier New', Courier, monospace;
+	overflow: hidden;
+}
+
+.headline {
+	padding: 5px;
+	font-size: 12px;
 }
 
 #statusBox {
@@ -29,7 +37,6 @@ h1 {
 	padding: 25px 0;
 	font-size: 1.5em;
 	text-align: center;
-	font-family: 'Courier New', Courier, monospace;
 }
 
 .icon {

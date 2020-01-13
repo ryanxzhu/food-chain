@@ -1,7 +1,8 @@
 const canvas = document.querySelector('canvas');
 const infoBox = document.querySelector('#infoBox');
-const statusBox = document.querySelector('#statusBox');
+const newsfeed = document.querySelector('#newsfeed');
 const c = canvas.getContext('2d');
+const statusBox = document.querySelector('#statusBox');
 const controlsSection = document.querySelector('#controls');
 const sunlightSlider = document.querySelector('#sunlightSlider');
 const worldSpeedSlider = document.querySelector('#worldSpeedSlider');
@@ -10,12 +11,17 @@ const h4 = document.querySelectorAll('h4');
 const gameSpeedArray = [ 1, 2, 3, 4 ];
 const sizesArray = [];
 const dietArray = [];
-var nameCount = 0;
-var usedControlCount = 0;
+var newsArray = [];
+const runOneTime = [];
+var firstNameCount = 0;
+var lastNameCount = 0;
+var numOfSpecies = 0;
+var spawnCount = 0;
 
 for (let index = 0; index < 7; index++) {
 	sizesArray.push(8 * Math.pow(2, index));
 	Math.random() < 0.5 ? dietArray.push('carnivore') : dietArray.push('herbivore');
+	makeStatusBoxShell();
 }
 
 var gameSpeed = gameSpeedArray[0];
@@ -29,77 +35,16 @@ var initialVelocity = 1;
 
 var greenaeArray = [];
 var yellowinArray = [];
-let greenae;
-let yellowin;
-let redla;
-let blueson;
-let purpleg;
-let blackarr;
-let oranget;
+let orangetArray = [];
+let redlaArray = [];
+let purplegArray = [];
+let bluesonArray = [];
+let blackarrArray = [];
 
-const statusBoxElArray = [];
-
-// function makeStatusBoxShell() {
-// 	for (let index = 0; index < 7; index++) {
-// 		let statusDiv = document.createElement('div');
-// 		let statusSpeciesCount = document.createElement('span');
-// 		statusSpeciesCount.classList.add('speciesCount');
-// 		statusDiv.appendChild(statusSpeciesCount);
-// 		let statusSpeciesCircle = document.createElement('div');
-// 		statusSpeciesCircle.classList.add('speciesCircle');
-// 		statusDiv.appendChild(statusSpeciesCircle);
-// 		let statusSpeciesName = document.createElement('span');
-// 		statusSpeciesName.classList.add('speciesName');
-// 		statusDiv.appendChild(statusSpeciesName);
-// 		let statusSpeciesDescription = document.createElement('span');
-// 		statusSpeciesDescription.classList.add('speciesDescription');
-// 		statusDiv.appendChild(statusSpeciesDescription);
-// 		statusBox.appendChild(statusDiv);
-// 	}
-// }
-
-function makeStatusBoxShell() {
-	let statusDiv = document.createElement('div');
-	let statusSpeciesCount = document.createElement('span');
-	statusSpeciesCount.classList.add('speciesCount');
-	statusDiv.appendChild(statusSpeciesCount);
-	let statusSpeciesCircle = document.createElement('div');
-	statusSpeciesCircle.classList.add('speciesCircle');
-	statusDiv.appendChild(statusSpeciesCircle);
-	let statusSpeciesName = document.createElement('span');
-	statusSpeciesName.classList.add('speciesName');
-	statusDiv.appendChild(statusSpeciesName);
-	let statusSpeciesDescription = document.createElement('span');
-	statusSpeciesDescription.classList.add('speciesDescription');
-	statusDiv.appendChild(statusSpeciesDescription);
-	statusBox.appendChild(statusDiv);
-}
-
-makeStatusBoxShell();
-makeStatusBoxShell();
-
+const statusDivs = statusBox.querySelectorAll('.statusDiv');
 const speciesCountNodeList = statusBox.querySelectorAll('.speciesCount');
 const speciesCircleNodeList = statusBox.querySelectorAll('.speciesCircle');
 const speciesNameNodeList = statusBox.querySelectorAll('.speciesName');
-speciesCountNodeList[0].textContent = '10';
-speciesCircleNodeList[0].style.backgroundColor = 'rgb(24, 222, 84)';
-speciesNameNodeList[0].textContent = 'Greenae';
-speciesCountNodeList[1].textContent = '';
-speciesCircleNodeList[1].style.backgroundColor = 'yellow';
-speciesNameNodeList[1].textContent = 'Yellowin';
-
-// function fillStatusBox(array, count, color, name, description) {
-// 	for (let index = 0; index < array.length; index++) {
-
-// 	}
-// }
-
-const statusBoxNodeList = document.querySelectorAll('#statusBox > div');
-// console.log(statusBox.elem);
-
-// statusBox[i].speciesCount.textContent = greenaeArray.length;
-// statusBox.species.textContent = greenaeArray.length;
-// statusBox.speciesCount.textContent = greenaeArray.length;
 
 //Utility Functions
 
@@ -161,7 +106,6 @@ function removeBouncingArrow() {
 	if (document.querySelector('.icon') !== null) {
 		document.querySelector('.icon').remove();
 	}
-	console.log('hit');
 	sunlightSlider.removeEventListener('mousedown', removeBouncingArrow);
 	worldSpeedSlider.removeEventListener('mousedown', removeBouncingArrow);
 }
@@ -169,12 +113,14 @@ function removeBouncingArrow() {
 // Objects
 
 class Organism {
-	constructor(x, y, baseVelocity) {
+	constructor(x, y, baseVelocity, generation, lastName) {
 		this.x = x;
 		this.y = y;
-		this.name = namesArray[nameCount];
-		nameCount++;
-		this.adultSize;
+		this.firstName = firstNameArray[firstNameCount];
+		firstNameCount++;
+		this.lastName = lastName;
+		this.generation = generation;
+		this.adultSize = sizesArray[0];
 		this.color;
 		this.baseVelocity = baseVelocity;
 		this.velocity = this.baseVelocity;
@@ -188,8 +134,8 @@ class Organism {
 		this.size = this.adultSize * Math.min(1, Math.max(0.25, this.life / this.puberty));
 		this.death = 0;
 		this.deathSpan = 1000;
-		this.chanceToEvolveBase = 0.01;
-		this.chanceToEvolve = this.chanceToEvolveBase;
+		this.chanceToMutateBase = 0.01;
+		this.chanceToMutate = this.chanceToMutateBase;
 	}
 
 	resultantVelocity(xVelocity, yVelocity) {
@@ -286,6 +232,7 @@ class Organism {
 		}
 
 		this.life = this.life + gameSpeed;
+
 		if (this.life > this.lifeSpan || this.energy < 0) {
 			this.baseVelocity = 0.0000000000000000000000000001;
 			this.dead = true;
@@ -301,25 +248,35 @@ class Organism {
 
 		// movement
 		this.velocity = this.baseVelocity * gameSpeed;
+
 		this.angle = this.changeAngle(this.angle);
+
+		if (this.x + this.size > canvas.width) {
+			this.angle = 3 / 2 * Math.PI;
+		}
+		if (this.x - this.size < 0) {
+			this.angle = Math.PI / 2;
+		}
+		if (this.y + this.size > canvas.height) {
+			this.angle = Math.PI;
+		}
+		if (this.y - this.size < 0) {
+			this.angle = 0;
+		}
+
 		this.xVelocity = this.findXVelocity(this.angle, this.velocity);
 		this.yVelocity = this.findYVelocity(this.angle, this.velocity);
-		if (this.x + this.size > canvas.width || this.x - this.size < 0) {
-			this.xVelocity = -this.xVelocity;
-		}
-		if (this.y + this.size > canvas.height || this.y - this.size < 0) {
-			this.yVelocity = -this.yVelocity;
-		}
+
 		this.angle = this.angleOfDirection(this.xVelocity, this.yVelocity, this.velocity);
 		this.x += this.xVelocity;
 		this.y += this.yVelocity;
 
 		// breeding and evolving
 		this.chanceToBreed = this.chanceToBreedBase * gameSpeed * sunlightFraction;
-		this.chanceToEvolve = this.chanceToEvolveBase * gameSpeed;
+		this.chanceToMutate = this.chanceToMutateBase * gameSpeed;
 		if (this.life > this.puberty && Math.random() < this.chanceToBreed && this.constructor.name === 'Greenae') {
-			this.evolve();
-			greenaeArray.push(new Greenae(this.x, this.y, Math.random() * 0.4));
+			this.mutate();
+			greenaeArray.push(new Greenae(this.x, this.y, Math.random() * 0.4, this.generation + 1, this.lastName));
 		}
 		if (
 			this.life > this.puberty &&
@@ -327,7 +284,16 @@ class Organism {
 			this.constructor.name === 'Yellowin' &&
 			this.energy > 10000
 		) {
-			yellowinArray.push(new Yellowin(this.x, this.y, this.velocity * (1 + (Math.random() - 0.5) / 5)));
+			yellowinArray.push(
+				new Yellowin(
+					this.x,
+					this.y,
+					// this.velocity * (1 + (Math.random() - 0.5) / 5),
+					this.velocity,
+					this.generation + 1,
+					this.lastName
+				)
+			);
 			this.energy = this.energy - 5000;
 		}
 
@@ -337,19 +303,21 @@ class Organism {
 }
 
 class Greenae extends Organism {
-	constructor(x, y, baseVelocity) {
-		super(x, y, baseVelocity);
+	constructor(x, y, baseVelocity, generation, lastName) {
+		super(x, y, baseVelocity, generation, lastName);
 		this.hierarchy = 0;
-		this.adultSize = sizesArray[0];
 		this.color = 'rgb(24, 222, 84)';
 		this.lifeSpan = 1000 + Math.floor(Math.random() * 1200);
 		this.chanceToBreedBase = 0.004;
 		this.chanceToBreed = this.chanceToBreedBase;
 	}
 
-	evolve() {
-		if (Math.random() < this.chanceToEvolve) {
-			yellowinArray.push(new Yellowin(this.x, this.y, Math.random() * initialVelocity));
+	mutate() {
+		if (Math.random() < this.chanceToMutate) {
+			yellowinArray.push(
+				new Yellowin(this.x, this.y, Math.random() * initialVelocity, 1, lastNameArray[lastNameCount])
+			);
+			lastNameCount++;
 		}
 	}
 
@@ -358,8 +326,8 @@ class Greenae extends Organism {
 	}
 }
 class Yellowin extends Organism {
-	constructor(x, y, baseVelocity) {
-		super(x, y, baseVelocity);
+	constructor(x, y, baseVelocity, generation, lastName) {
+		super(x, y, baseVelocity, generation, lastName);
 		this.hierarchy = 1;
 		this.adultSize = sizesArray[1];
 		this.size = this.adultSize * Math.min(1, Math.max(0.25, this.life / this.puberty));
@@ -371,13 +339,38 @@ class Yellowin extends Organism {
 	}
 
 	decompose() {
-		console.log('decompose yellowin');
 		yellowinArray.splice(yellowinArray.indexOf(this), 1);
 	}
 }
 
+function clickToSpawn(e) {
+	if (spawnCount > 4) {
+		canvas.removeEventListener('click', clickToSpawn);
+		return;
+	}
+	greenaeArray.push(new Greenae(e.x, e.y, Math.random() * 0.4, 1, lastNameArray[lastNameCount]));
+	spawnCount++;
+}
+
+function drawInitialGreenaes() {
+	if (spawnCount > 4) {
+		canvas.style.cursor = 'default';
+		return;
+	}
+	canvas.style.cursor = 'pointer';
+	c.beginPath();
+	c.arc(mouse.x, mouse.y, sizesArray[0] * 0.25, 0, Math.PI * 2, false);
+	c.fillStyle = 'rgb(24, 222, 84)';
+	c.fill();
+	c.strokeStyle = 'white';
+	c.stroke();
+}
+
 // initilisation function
 function init() {
+	for (let index = 0; index < 20; index++) {
+		runOneTime.push(true);
+	}
 	controlsSection.style.height = '95px';
 
 	infoBox.style.width = '200px';
@@ -385,15 +378,20 @@ function init() {
 	canvas.height = innerHeight;
 	infoBox.height = innerHeight;
 
-	for (let index = 0; index < 5; index++) {
-		greenaeArray.push(
-			new Greenae(
-				randomIntFromRange(sizesArray[0] * 2, canvas.width - sizesArray[0] * 2),
-				randomIntFromRange(sizesArray[0] * 2, canvas.height - sizesArray[0] * 2),
-				Math.random() * 0.4
-			)
-		);
-	}
+	// for (let index = 0; index < 5; index++) {
+	// 	greenaeArray.push(
+	// 		new Greenae(
+	// 			randomIntFromRange(sizesArray[0] * 2, canvas.width - sizesArray[0] * 2),
+	// 			randomIntFromRange(sizesArray[0] * 2, canvas.height - sizesArray[0] * 2),
+	// 			Math.random() * 0.4,
+	// 			1,
+	// 			lastNameArray[lastNameCount]
+	// 		)
+	// 	);
+
+	// 	lastNameCount++;
+	// }
+	canvas.addEventListener('click', clickToSpawn);
 
 	const brownColorArray = createBrownArray();
 
@@ -409,8 +407,6 @@ function init() {
 
 	sunlightSlider.addEventListener('mousedown', removeBouncingArrow);
 
-	h4Container[1].style.left = '0px';
-	h4Container[0].style.left = '140px';
 	worldSpeedSlider.addEventListener('input', function() {
 		h4Container[1].style.left = parseFloat(this.value) * 93.5 + 'px';
 		gameSpeed = gameSpeedArray[this.value];
@@ -436,21 +432,25 @@ function init() {
 		canvas.width = innerWidth - parseFloat(infoBox.style.width);
 		canvas.height = innerHeight;
 	});
+
+	h4Container[1].style.left = '0px';
+	h4Container[0].style.left = '140px';
 }
 
 //Animation loop
 function animate() {
 	requestAnimationFrame(animate);
 
-	if (nameCount > namesArray.length - 1) {
-		nameCount = 0;
+	// Refresh first name and last name array if the end of the array is reached
+	if (firstNameCount > firstNameArray.length - 1) {
+		firstNameCount = 0;
 	}
 
-	c.clearRect(0, 0, canvas.width, canvas.height);
+	if (lastNameCount > lastNameArray.length - 1) {
+		lastNameCount = 0;
+	}
 
-	yellowinArray.forEach((e) => e.update());
-	greenaeArray.forEach((e) => e.update());
-
+	// Check for collisions
 	for (var i = 0; i < yellowinArray.length; i++) {
 		if (yellowinArray[i].dead === true || yellowinArray[i].energy > 20000) {
 			continue;
@@ -467,8 +467,62 @@ function animate() {
 		}
 	}
 
-	updatePopulation(greenaeArray, 0);
-	updatePopulation(yellowinArray, 1);
+	// draw the next frame
+	c.clearRect(0, 0, canvas.width, canvas.height);
+
+	drawInitialGreenaes();
+
+	yellowinArray.forEach((e) => e.update());
+	greenaeArray.forEach((e) => e.update());
+
+	// Check for headlines
+	checkForHeadlines();
+
+	// Update bottom status bar
+	if (numOfSpecies < 1 && greenaeArray.length > 0) {
+		numOfSpecies++;
+		speciesCountNodeList[0].textContent = '';
+		speciesCircleNodeList[0].style.backgroundColor = 'rgb(24, 222, 84)';
+		speciesNameNodeList[0].textContent = 'Greenae';
+		statusDivs[0].style.display = 'flex';
+		updatePopulation(greenaeArray, 0);
+	}
+
+	// speciesCountNodeList[1].textContent = '0';
+	// speciesCircleNodeList[1].style.backgroundColor = 'yellow';
+	// speciesNameNodeList[1].textContent = 'Yellowin';
+
+	// for (let index = 0; index < numOfSpecies; index++) {
+	// 	switch (index) {
+	// 		case 0:
+	// 			updatePopulation(greenaeArray, 0);
+	// 			break;
+
+	// 		case 1:
+	// 			updatePopulation(yellowinArray, 1);
+	// 			break;
+	// 	}
+	// }
+}
+
+// InfoBar
+function makeStatusBoxShell() {
+	let statusDiv = document.createElement('div');
+	statusDiv.classList.add('statusDiv');
+	let statusSpeciesCount = document.createElement('span');
+	statusSpeciesCount.classList.add('speciesCount');
+	statusDiv.appendChild(statusSpeciesCount);
+	let statusSpeciesCircle = document.createElement('div');
+	statusSpeciesCircle.classList.add('speciesCircle');
+	statusDiv.appendChild(statusSpeciesCircle);
+	let statusSpeciesName = document.createElement('span');
+	statusSpeciesName.classList.add('speciesName');
+	statusDiv.appendChild(statusSpeciesName);
+	let statusSpeciesDescription = document.createElement('span');
+	statusSpeciesDescription.classList.add('speciesDescription');
+	statusDiv.appendChild(statusSpeciesDescription);
+	statusDiv.style.display = 'none';
+	statusBox.appendChild(statusDiv);
 }
 
 function updatePopulation(array, i) {
