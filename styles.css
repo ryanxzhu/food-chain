@@ -187,10 +187,12 @@ input:not(:active) + #h4-container h4 {
 	width: 50px;
 	margin-right: 8px;
 	text-align: right;
+	color: red;
 }
 
 .speciesName {
 	margin-left: 10px;
+	color: red;
 }
 
 .bounce {

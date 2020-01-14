@@ -17,6 +17,44 @@ var firstNameCount = 0;
 var lastNameCount = 0;
 var numOfSpecies = 0;
 var spawnCount = 0;
+var animateStartingGreenaeSizeVar = 0;
+
+let greenaeArray = [];
+greenaeArray.nameOfOrganism = 'Greenae';
+greenaeArray.hasMutated = false;
+greenaeArray.hierarchy = 0;
+
+let yellowinArray = [];
+yellowinArray.nameOfOrganism = 'Yellowin';
+yellowinArray.hasMutated = false;
+yellowinArray.hierarchy = 1;
+
+let orangetArray = [];
+orangetArray.nameOfOrganism = 'Oranget';
+orangetArray.hasMutated = false;
+orangetArray.hierarchy = 2;
+
+let redlaArray = [];
+redlaArray.nameOfOrganism = 'Redla';
+redlaArray.hasMutated = false;
+redlaArray.hierarchy = 3;
+
+let purplegArray = [];
+purplegArray.nameOfOrganism = 'Purpleg';
+purplegArray.hasMutated = false;
+purplegArray.hierarchy = 4;
+
+let bluesonArray = [];
+bluesonArray.nameOfOrganism = 'Blueson';
+bluesonArray.hasMutated = false;
+bluesonArray.hierarchy = 5;
+
+let blackarrArray = [];
+blackarrArray.nameOfOrganism = 'Blackarr';
+blackarrArray.hasMutated = false;
+blackarrArray.hierarchy = 6;
+
+let speciesArray = [ greenaeArray, yellowinArray, orangetArray, redlaArray, purplegArray, bluesonArray, blackarrArray ];
 
 for (let index = 0; index < 7; index++) {
 	sizesArray.push(8 * Math.pow(2, index));
@@ -27,19 +65,11 @@ for (let index = 0; index < 7; index++) {
 var gameSpeed = gameSpeedArray[0];
 var sunlightFraction = 1;
 var mouse = {
-	x: 200,
-	y: 200
+	x: null,
+	y: null
 };
 
-var initialVelocity = 1;
-
-var greenaeArray = [];
-var yellowinArray = [];
-let orangetArray = [];
-let redlaArray = [];
-let purplegArray = [];
-let bluesonArray = [];
-let blackarrArray = [];
+let initialVelocity = 1;
 
 const statusDivs = statusBox.querySelectorAll('.statusDiv');
 const speciesCountNodeList = statusBox.querySelectorAll('.speciesCount');
@@ -210,14 +240,18 @@ class Organism {
 			return;
 		}
 
-		c.fillStyle = this.color;
 		c.save();
 		c.globalAlpha = this.opacity;
+		c.fillStyle = this.color;
 		c.fill();
 
 		this.life < this.puberty ? (c.strokeStyle = 'white') : (c.strokeStyle = 'black');
 		c.stroke();
 		c.restore();
+	}
+
+	decompose() {
+		speciesArray[this.hierarchy].splice(speciesArray[this.hierarchy].indexOf(this), 1);
 	}
 
 	update() {
@@ -278,18 +312,12 @@ class Organism {
 			this.mutate();
 			greenaeArray.push(new Greenae(this.x, this.y, Math.random() * 0.4, this.generation + 1, this.lastName));
 		}
-		if (
-			this.life > this.puberty &&
-			this.life % 100 < 10 &&
-			this.constructor.name === 'Yellowin' &&
-			this.energy > 10000
-		) {
+		if (this.life > this.puberty && this.constructor.name === 'Yellowin' && this.energy > 10000) {
 			yellowinArray.push(
 				new Yellowin(
 					this.x,
 					this.y,
-					// this.velocity * (1 + (Math.random() - 0.5) / 5),
-					this.velocity,
+					this.velocity * (1 + (Math.random() - 0.5) / 5),
 					this.generation + 1,
 					this.lastName
 				)
@@ -305,8 +333,8 @@ class Organism {
 class Greenae extends Organism {
 	constructor(x, y, baseVelocity, generation, lastName) {
 		super(x, y, baseVelocity, generation, lastName);
-		this.hierarchy = 0;
 		this.color = 'rgb(24, 222, 84)';
+		this.hierarchy = 0;
 		this.lifeSpan = 1000 + Math.floor(Math.random() * 1200);
 		this.chanceToBreedBase = 0.004;
 		this.chanceToBreed = this.chanceToBreedBase;
@@ -315,24 +343,19 @@ class Greenae extends Organism {
 	mutate() {
 		if (Math.random() < this.chanceToMutate) {
 			yellowinArray.push(
-				new Yellowin(this.x, this.y, Math.random() * initialVelocity, 1, lastNameArray[lastNameCount])
+				new Yellowin(this.x, this.y, Math.random() * initialVelocity, this.generation, this.lastName)
 			);
-			lastNameCount++;
 		}
-	}
-
-	decompose() {
-		greenaeArray.splice(greenaeArray.indexOf(this), 1);
 	}
 }
 class Yellowin extends Organism {
 	constructor(x, y, baseVelocity, generation, lastName) {
 		super(x, y, baseVelocity, generation, lastName);
-		this.hierarchy = 1;
 		this.adultSize = sizesArray[1];
 		this.size = this.adultSize * Math.min(1, Math.max(0.25, this.life / this.puberty));
 		this.diet = 'herbivore';
 		this.color = 'yellow';
+		this.hierarchy = 1;
 		this.energy = 5000;
 		this.opacity = this.energy / 20000;
 		this.energyLoss = 1 + 6 * Math.pow(this.velocity, 2) * this.size;
@@ -345,21 +368,27 @@ class Yellowin extends Organism {
 
 function clickToSpawn(e) {
 	if (spawnCount > 4) {
-		canvas.removeEventListener('click', clickToSpawn);
+		canvas.removeEventListener('mousedown', clickToSpawn);
 		return;
 	}
 	greenaeArray.push(new Greenae(e.x, e.y, Math.random() * 0.4, 1, lastNameArray[lastNameCount]));
+	lastNameCount++;
 	spawnCount++;
 }
 
-function drawInitialGreenaes() {
+function drawGreenaeAtMousePointer() {
 	if (spawnCount > 4) {
 		canvas.style.cursor = 'default';
 		return;
 	}
 	canvas.style.cursor = 'pointer';
 	c.beginPath();
-	c.arc(mouse.x, mouse.y, sizesArray[0] * 0.25, 0, Math.PI * 2, false);
+	c.arc(mouse.x, mouse.y, sizesArray[0] * animateStartingGreenaeSizeVar, 0, Math.PI * 2, false);
+
+	animateStartingGreenaeSizeVar < 1 && mouse.x !== null
+		? (animateStartingGreenaeSizeVar += 0.015)
+		: (animateStartingGreenaeSizeVar = 0);
+
 	c.fillStyle = 'rgb(24, 222, 84)';
 	c.fill();
 	c.strokeStyle = 'white';
@@ -391,7 +420,7 @@ function init() {
 
 	// 	lastNameCount++;
 	// }
-	canvas.addEventListener('click', clickToSpawn);
+	canvas.addEventListener('mousedown', clickToSpawn);
 
 	const brownColorArray = createBrownArray();
 
@@ -467,42 +496,33 @@ function animate() {
 		}
 	}
 
-	// draw the next frame
+	// clear canvas
 	c.clearRect(0, 0, canvas.width, canvas.height);
 
-	drawInitialGreenaes();
-
-	yellowinArray.forEach((e) => e.update());
-	greenaeArray.forEach((e) => e.update());
+	drawGreenaeAtMousePointer();
 
 	// Check for headlines
 	checkForHeadlines();
 
-	// Update bottom status bar
-	if (numOfSpecies < 1 && greenaeArray.length > 0) {
-		numOfSpecies++;
-		speciesCountNodeList[0].textContent = '';
-		speciesCircleNodeList[0].style.backgroundColor = 'rgb(24, 222, 84)';
-		speciesNameNodeList[0].textContent = 'Greenae';
-		statusDivs[0].style.display = 'flex';
-		updatePopulation(greenaeArray, 0);
+	for (let index = 0; index < speciesArray.length; index++) {
+		// update each Organism and draw the next frame
+		speciesArray[index].forEach((e) => e.update());
+
+		// Update bottom status bar
+		if (speciesArray[index].hasMutated === true) {
+			updatePopulation(speciesArray[index], index);
+		} else if (speciesArray[index].length > 0) {
+			initialiseStatusInfo(speciesArray[index]);
+			speciesArray[index].hasMutated = true;
+		}
 	}
+}
 
-	// speciesCountNodeList[1].textContent = '0';
-	// speciesCircleNodeList[1].style.backgroundColor = 'yellow';
-	// speciesNameNodeList[1].textContent = 'Yellowin';
-
-	// for (let index = 0; index < numOfSpecies; index++) {
-	// 	switch (index) {
-	// 		case 0:
-	// 			updatePopulation(greenaeArray, 0);
-	// 			break;
-
-	// 		case 1:
-	// 			updatePopulation(yellowinArray, 1);
-	// 			break;
-	// 	}
-	// }
+function initialiseStatusInfo(array) {
+	speciesCountNodeList[array[0].hierarchy].textContent = array.length;
+	speciesCircleNodeList[array[0].hierarchy].style.backgroundColor = array[0].color;
+	speciesNameNodeList[array[0].hierarchy].textContent = array.nameOfOrganism;
+	statusDivs[array[0].hierarchy].style.display = 'flex';
 }
 
 // InfoBar
@@ -530,6 +550,7 @@ function updatePopulation(array, i) {
 	array.forEach(function(e) {
 		e.dead === false ? populationCount++ : populationCount;
 	});
+
 	if (populationCount === 0) {
 		speciesCountNodeList[i].style.color = 'rgb(80, 80, 80)';
 		speciesNameNodeList[i].style.color = 'rgb(80, 80, 80)';

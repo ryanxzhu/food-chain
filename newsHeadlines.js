@@ -8,7 +8,9 @@ const headlines = {
 	yellowinNoEnergy:
 		'- A Yellowin just died from hunger! Yellowin must eat Greenae to survive and fade when they are starving.',
 	sunlight: '- Woah so bright! Greenae love more sun, I think it makes them reproduce a lot faster.',
-	fastForward: '- Hyperspeed! Fast forwarding time makes everything faster!'
+	fastForward: '- Hyperspeed! Fast forwarding time makes everything faster!',
+	planted5: '- Seeding 5 Greenae should be enough to start them off. They can grow themselves from here.',
+	moreYellowinThanGreenae: 'Wow the Yellowin have really taken over! There are more of them than Greenae now.'
 };
 
 function checkForHeadlines() {
@@ -46,6 +48,12 @@ function checkForHeadlines() {
 		}
 	}
 
+	if (headlines['sunlight'] !== null) {
+		if (sunlightFraction > 1.1) {
+			reportNews('sunlight');
+		}
+	}
+
 	if (headlines['yellowinEats'] !== null) {
 		yellowinArray.forEach((e) => {
 			if (e.energy > 20000) {
@@ -62,21 +70,28 @@ function checkForHeadlines() {
 		});
 	}
 
-	if (headlines['sunlight'] !== null) {
-		if (sunlightFraction > 1.1) {
-			reportNews('sunlight');
-		}
-	}
-
 	if (headlines['fastForward'] !== null) {
 		if (gameSpeed > 1) {
 			reportNews('fastForward');
+		}
+	}
+
+	if (headlines['planted5'] !== null) {
+		if (spawnCount > 4) {
+			reportNews('planted5');
+		}
+	}
+
+	if (headlines['moreYellowinThanGreenae'] !== null) {
+		if (parseInt(speciesCountNodeList[1].textContent) > parseInt(speciesCountNodeList[0].textContent)) {
+			reportNews('moreYellowinThanGreenae');
 		}
 	}
 }
 
 function reportNews(newsText) {
 	if (headlines[newsText] === null) {
+		console.log('does this run');
 		return null;
 	}
 
@@ -85,8 +100,11 @@ function reportNews(newsText) {
 	newsDiv.textContent = headlines[newsText];
 	headlines[newsText] = null;
 	newsArray.push(newsDiv);
-	for (let index = Math.min(6, newsArray.length - 1); index >= 0; index--) {
-		newsArray[index].style.opacity = (index + 1) / (Math.min(6, newsArray.length - 1) + 1);
+	let newsOpacity = 1;
+
+	for (let index = newsArray.length - 1; index >= 0; index--) {
+		newsArray[index].style.opacity = newsOpacity;
+		newsOpacity -= 0.2;
 		newsfeed.appendChild(newsArray[index]);
 	}
 }
