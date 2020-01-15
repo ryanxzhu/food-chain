@@ -10,7 +10,9 @@ const headlines = {
 	sunlight: '- Woah so bright! Greenae love more sun, I think it makes them reproduce a lot faster.',
 	fastForward: '- Hyperspeed! Fast forwarding time makes everything faster!',
 	planted5: '- Seeding 5 Greenae should be enough to start them off. They can grow themselves from here.',
-	moreYellowinThanGreenae: 'Wow the Yellowin have really taken over! There are more of them than Greenae now.'
+	moreYellowinThanGreenae: '- Wow the Yellowin have really taken over! There are more of them than Greenae now.',
+	healthyPopulationGreenae:
+		'- Your Greenae population has finally grown to a healthy level! See population status below.'
 };
 
 function checkForHeadlines() {
@@ -85,6 +87,18 @@ function checkForHeadlines() {
 	if (headlines['moreYellowinThanGreenae'] !== null) {
 		if (parseInt(speciesCountNodeList[1].textContent) > parseInt(speciesCountNodeList[0].textContent)) {
 			reportNews('moreYellowinThanGreenae');
+		}
+	}
+
+	if (headlines['healthyPopulationGreenae'] !== null) {
+		let populationCount = 0;
+		greenaeArray.forEach((e) => {
+			if (e.dead !== true) {
+				populationCount++;
+			}
+		});
+		if (populationCount > 199) {
+			reportNews('healthyPopulationGreenae');
 		}
 	}
 }
