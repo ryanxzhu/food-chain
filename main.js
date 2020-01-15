@@ -234,6 +234,7 @@ class Organism {
 	draw() {
 		c.beginPath();
 		c.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+		// c.rect(this.x, this.y, this.size * 2, this.size * 2);
 		if (this.dead === true) {
 			c.strokeStyle = this.color;
 			c.stroke();
