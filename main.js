@@ -318,7 +318,7 @@ class Organism {
 				new Yellowin(
 					this.x,
 					this.y,
-					this.velocity * (1 + (Math.random() - 0.5) / 5),
+					this.baseVelocity * (1 + (Math.random() - 0.5) / 5),
 					this.generation + 1,
 					this.lastName
 				)
