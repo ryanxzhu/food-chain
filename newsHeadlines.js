@@ -1,3 +1,6 @@
+let newsArray = [];
+let YellowinPopulation = 0;
+
 const headlines = {
 	spawn: '- You spawned your first Greenae! Greenae are small creatures that grow using sunlight.',
 	adulthood: '- Your first Greenae reaches adulthood! You can tell adults by their black skin.',
@@ -12,7 +15,9 @@ const headlines = {
 	planted5: '- Seeding 5 Greenae should be enough to start them off. They can grow themselves from here.',
 	moreYellowinThanGreenae: '- Wow the Yellowin have really taken over! There are more of them than Greenae now.',
 	healthyPopulationGreenae:
-		'- Your Greenae population has finally grown to a healthy level! See population status below.'
+		'- Your Greenae population has finally grown to a healthy level! See population status below.',
+	yellowinExtinct:
+		'- Aww no your Yellowin population just went extinct! Hopefully another Greenae might mutate into a Yellowin soon.'
 };
 
 function checkForHeadlines() {
@@ -101,14 +106,31 @@ function checkForHeadlines() {
 			reportNews('healthyPopulationGreenae');
 		}
 	}
+
+	if (headlines['yellowinExtinct'] !== null) {
+		let tempPopulation = 0;
+		yellowinArray.forEach((e) => {
+			if (e.dead !== true) {
+				tempPopulation++;
+			}
+		});
+		if (tempPopulation > 10) {
+			YellowinPopulation = tempPopulation;
+		}
+		if (tempPopulation === 0 && YellowinPopulation > 10) {
+			reportNews('yellowinExtinct');
+		}
+	}
 }
 
 function reportNews(newsText) {
 	if (headlines[newsText] === null) {
-		console.log('does this run');
 		return null;
 	}
 
+	const newsSound = new Audio();
+	newsSound.src = 'news-sound.wav';
+	newsSound.play();
 	let newsDiv = document.createElement('div');
 	newsDiv.classList.add('headline');
 	newsDiv.textContent = headlines[newsText];

@@ -11,7 +11,6 @@ const h4 = document.querySelectorAll('h4');
 const gameSpeedArray = [ 1, 2, 3, 4 ];
 const radiusArray = [];
 const dietArray = [];
-var newsArray = [];
 const runOneTime = [];
 var firstNameCount = 0;
 var lastNameCount = 0;
@@ -220,7 +219,6 @@ class Organism {
 	draw() {
 		c.beginPath();
 		c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-		// c.rect(this.x, this.y, this.radius * 2, this.radius * 2);
 		if (this.dead === true) {
 			c.strokeStyle = this.color;
 			c.stroke();
@@ -263,7 +261,7 @@ class Organism {
 		this.radius = this.adultRadius * Math.min(1, Math.max(0.25, this.life / this.puberty));
 
 		// energy loss
-		this.energyLoss = 1 + 6 * Math.pow(this.velocity, 2) * this.radius;
+		this.energyLoss = 3 * this.radius + 3 * this.velocity * this.radius;
 		this.energy = this.energy - this.energyLoss;
 		this.opacity = Math.max(this.energy / 10000, 0);
 
@@ -298,18 +296,17 @@ class Organism {
 		if (
 			this.life > this.puberty &&
 			Math.random() < this.chanceToBreed &&
-			this.constructor.name === 'Greenae' &&
-			greenaeArray.length + yellowinArray.length < 1500
+			this.constructor.name === 'Greenae'
+			// greenaeArray.length + yellowinArray.length < 1500
 		) {
 			this.mutate();
-
 			this.breed();
 			// greenaeArray.push(new Greenae(this.x, this.y, Math.random() * 0.8, this.generation + 1, this.lastName));
 		}
 		if (
 			this.life > this.puberty &&
 			this.constructor.name === 'Yellowin' &&
-			this.energy > 10000 &&
+			this.energy > 10000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[1], 2) &&
 			this.life % 300 < 5
 		) {
 			yellowinArray.push(
@@ -319,10 +316,11 @@ class Organism {
 					this.baseVelocity * (1 + (Math.random() - 0.5) / 5),
 					this.generation + 1,
 					this.lastName,
-					this.adultRadius * (1 + (Math.random() - 0.5) / 5)
+					this.adultRadius * (1 + (Math.random() - 0.5) / 5),
+					5000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[1], 2) / 2
 				)
 			);
-			this.energy = this.energy - 5000;
+			this.energy = this.energy - 5000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[1], 2);
 		}
 
 		// draw
@@ -342,29 +340,34 @@ class Greenae extends Organism {
 	}
 
 	breed() {
-		let distanceArray = [];
+		let closeGreenaeArray = [];
 		for (let index = 0; index < greenaeArray.length; index++) {
 			if (
-				Math.abs(this.x - greenaeArray[index].x) < this.radius * 5 &&
-				Math.abs(this.y - greenaeArray[index].y) < this.radius * 5
+				Math.abs(this.x - greenaeArray[index].x) < this.radius * 4 &&
+				Math.abs(this.y - greenaeArray[index].y) < this.radius * 4
 			) {
-				distanceArray.push([ greenaeArray[index].x, greenaeArray[index].y ]);
+				closeGreenaeArray.push(greenaeArray[index]);
 			}
 		}
 
-		for (let index = 0; index < 50; index++) {
+		for (let index = 0; index < 15; index++) {
 			let num;
 			let num2;
 			let touching = false;
 			Math.random() < 0.5 ? (num = 1) : (num = -1);
 			Math.random() < 0.5 ? (num2 = 1) : (num2 = -1);
-			let randomX = this.x + num * randomIntFromRange(this.radius * 2, this.radius * 5);
-			let randomY = this.y + num2 * randomIntFromRange(this.radius * 2, this.radius * 5);
+			let randomX = this.x + num * randomIntFromRange(this.radius * 2, this.radius * 3);
+			let randomY = this.y + num2 * randomIntFromRange(this.radius * 2, this.radius * 3);
 
-			for (let index = 0; index < distanceArray.length; index++) {
-				if (getDistance(randomX, randomY, distanceArray[index][0], distanceArray[index][1]) < this.radius * 2) {
-					touching = true;
-					break;
+			for (let index = 0; index < closeGreenaeArray.length; index++) {
+				if (closeGreenaeArray[index].dead === false) {
+					if (
+						getDistance(randomX, randomY, closeGreenaeArray[index].x, closeGreenaeArray[index].y) <
+						this.radius * 2
+					) {
+						touching = true;
+						break;
+					}
 				}
 			}
 
@@ -387,26 +390,30 @@ class Greenae extends Organism {
 				new Yellowin(
 					this.x,
 					this.y,
-					Math.random() * initialVelocity,
+					Math.min(0.33, Math.random()) * initialVelocity,
+					// initialVelocity,
 					this.generation,
 					this.lastName,
-					radiusArray[1] * (1 + (Math.random() - 0.5))
+					radiusArray[1] * (1 + (Math.random() - 0.5)),
+					5000
 				)
 			);
 		}
 	}
 }
 class Yellowin extends Organism {
-	constructor(x, y, baseVelocity, generation, lastName, adultRadius) {
+	constructor(x, y, baseVelocity, generation, lastName, adultRadius, energy) {
 		super(x, y, baseVelocity, generation, lastName);
 		this.adultRadius = adultRadius;
 		this.radius = this.adultRadius * Math.min(1, Math.max(0.25, this.life / this.puberty));
 		this.diet = 'herbivore';
 		this.color = 'yellow';
 		this.hierarchy = 1;
-		this.energy = 5000;
-		this.opacity = this.energy / 20000;
-		this.energyLoss = 1 + 6 * Math.pow(this.velocity, 2) * this.radius;
+		// this.energy = 5000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[1], 2);
+		this.energy = energy;
+		this.opacity = this.energy / (20000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[1], 2));
+		// this.energyLoss = 1 + 6 * Math.pow(this.velocity, 2) * this.radius;
+		this.energyLoss = 3 * this.radius + 3 * this.velocity * this.radius;
 	}
 
 	decompose() {
