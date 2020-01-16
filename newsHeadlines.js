@@ -1,5 +1,6 @@
 let newsArray = [];
 let YellowinPopulation = 0;
+let GreenaePopulation = 0;
 
 const headlines = {
 	spawn: '- You spawned your first Greenae! Greenae are small creatures that grow using sunlight.',
@@ -17,7 +18,9 @@ const headlines = {
 	healthyPopulationGreenae:
 		'- Your Greenae population has finally grown to a healthy level! See population status below.',
 	yellowinExtinct:
-		'- Aww no your Yellowin population just went extinct! Hopefully another Greenae might mutate into a Yellowin soon.'
+		'- Aww no your Yellowin population just went extinct! Hopefully another Greenae might mutate into a Yellowin soon.',
+	greenaeExtinct:
+		"Aww no your Greenae population just went extinct! Without this primary producer, your ecosystem can't survive unfortunately. Restart to try again!"
 };
 
 function checkForHeadlines() {
@@ -119,6 +122,21 @@ function checkForHeadlines() {
 		}
 		if (tempPopulation === 0 && YellowinPopulation > 10) {
 			reportNews('yellowinExtinct');
+		}
+	}
+
+	if (headlines['greenaeExtinct'] !== null) {
+		let tempPopulation = 0;
+		greenaeArray.forEach((e) => {
+			if (e.dead !== true) {
+				tempPopulation++;
+			}
+		});
+		if (tempPopulation > 0) {
+			GreenaePopulation = tempPopulation;
+		}
+		if (tempPopulation === 0 && GreenaePopulation > 0) {
+			reportNews('greenaeExtinct');
 		}
 	}
 }
