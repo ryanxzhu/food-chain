@@ -9,7 +9,7 @@ const worldSpeedSlider = document.querySelector('#worldSpeedSlider');
 const h4Container = document.querySelectorAll('#h4-container');
 const h4 = document.querySelectorAll('h4');
 const gameSpeedArray = [ 1, 2, 3, 4 ];
-const sizesArray = [];
+const radiusArray = [];
 const dietArray = [];
 var newsArray = [];
 const runOneTime = [];
@@ -20,44 +20,30 @@ var spawnCount = 0;
 var animateStartingGreenaeSizeVar = 0;
 
 let greenaeArray = [];
-greenaeArray.nameOfOrganism = 'Greenae';
-greenaeArray.hasMutated = false;
-greenaeArray.hierarchy = 0;
-
 let yellowinArray = [];
-yellowinArray.nameOfOrganism = 'Yellowin';
-yellowinArray.hasMutated = false;
-yellowinArray.hierarchy = 1;
-
 let orangetArray = [];
-orangetArray.nameOfOrganism = 'Oranget';
-orangetArray.hasMutated = false;
-orangetArray.hierarchy = 2;
-
 let redlaArray = [];
-redlaArray.nameOfOrganism = 'Redla';
-redlaArray.hasMutated = false;
-redlaArray.hierarchy = 3;
-
 let purplegArray = [];
-purplegArray.nameOfOrganism = 'Purpleg';
-purplegArray.hasMutated = false;
-purplegArray.hierarchy = 4;
-
 let bluesonArray = [];
-bluesonArray.nameOfOrganism = 'Blueson';
-bluesonArray.hasMutated = false;
-bluesonArray.hierarchy = 5;
-
 let blackarrArray = [];
+
+greenaeArray.nameOfOrganism = 'Greenae';
+yellowinArray.nameOfOrganism = 'Yellowin';
+orangetArray.nameOfOrganism = 'Oranget';
+redlaArray.nameOfOrganism = 'Redla';
+purplegArray.nameOfOrganism = 'Purpleg';
+bluesonArray.nameOfOrganism = 'Blueson';
 blackarrArray.nameOfOrganism = 'Blackarr';
-blackarrArray.hasMutated = false;
-blackarrArray.hierarchy = 6;
 
 let speciesArray = [ greenaeArray, yellowinArray, orangetArray, redlaArray, purplegArray, bluesonArray, blackarrArray ];
 
+for (let index = 0; index < speciesArray.length; index++) {
+	speciesArray[index].hasMutated = false;
+	speciesArray[index].hierarchy = index;
+}
+
 for (let index = 0; index < 7; index++) {
-	sizesArray.push(8 * Math.pow(2, index));
+	radiusArray.push(8 * Math.pow(2, index));
 	Math.random() < 0.5 ? dietArray.push('carnivore') : dietArray.push('herbivore');
 	makeStatusBoxShell();
 }
@@ -150,7 +136,7 @@ class Organism {
 		firstNameCount++;
 		this.lastName = lastName;
 		this.generation = generation;
-		this.adultSize = sizesArray[0];
+		this.adultRadius = radiusArray[0];
 		this.color;
 		this.baseVelocity = baseVelocity;
 		this.velocity = this.baseVelocity;
@@ -161,7 +147,7 @@ class Organism {
 		this.life = 1;
 		this.puberty = 400 + Math.floor(Math.random() * 800);
 		this.lifeSpan = 3000 + Math.floor(Math.random() * 1200);
-		this.size = this.adultSize * Math.min(1, Math.max(0.25, this.life / this.puberty));
+		this.radius = this.adultRadius * Math.min(1, Math.max(0.25, this.life / this.puberty));
 		this.death = 0;
 		this.deathSpan = 1000;
 		this.chanceToMutateBase = 0.01;
@@ -233,8 +219,8 @@ class Organism {
 
 	draw() {
 		c.beginPath();
-		c.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
-		// c.rect(this.x, this.y, this.size * 2, this.size * 2);
+		c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+		// c.rect(this.x, this.y, this.radius * 2, this.radius * 2);
 		if (this.dead === true) {
 			c.strokeStyle = this.color;
 			c.stroke();
@@ -274,10 +260,10 @@ class Organism {
 		}
 
 		// growth
-		this.size = this.adultSize * Math.min(1, Math.max(0.25, this.life / this.puberty));
+		this.radius = this.adultRadius * Math.min(1, Math.max(0.25, this.life / this.puberty));
 
 		// energy loss
-		this.energyLoss = 1 + 6 * Math.pow(this.velocity, 2) * this.size;
+		this.energyLoss = 1 + 6 * Math.pow(this.velocity, 2) * this.radius;
 		this.energy = this.energy - this.energyLoss;
 		this.opacity = Math.max(this.energy / 10000, 0);
 
@@ -286,16 +272,16 @@ class Organism {
 
 		this.angle = this.changeAngle(this.angle);
 
-		if (this.x + this.size > canvas.width) {
+		if (this.x + this.radius > canvas.width) {
 			this.angle = 3 / 2 * Math.PI;
 		}
-		if (this.x - this.size < 0) {
+		if (this.x - this.radius < 0) {
 			this.angle = Math.PI / 2;
 		}
-		if (this.y + this.size > canvas.height) {
+		if (this.y + this.radius > canvas.height) {
 			this.angle = Math.PI;
 		}
-		if (this.y - this.size < 0) {
+		if (this.y - this.radius < 0) {
 			this.angle = 0;
 		}
 
@@ -309,18 +295,31 @@ class Organism {
 		// breeding and evolving
 		this.chanceToBreed = this.chanceToBreedBase * gameSpeed * sunlightFraction;
 		this.chanceToMutate = this.chanceToMutateBase * gameSpeed;
-		if (this.life > this.puberty && Math.random() < this.chanceToBreed && this.constructor.name === 'Greenae') {
+		if (
+			this.life > this.puberty &&
+			Math.random() < this.chanceToBreed &&
+			this.constructor.name === 'Greenae' &&
+			greenaeArray.length + yellowinArray.length < 1500
+		) {
 			this.mutate();
-			greenaeArray.push(new Greenae(this.x, this.y, Math.random() * 0.4, this.generation + 1, this.lastName));
+
+			this.breed();
+			// greenaeArray.push(new Greenae(this.x, this.y, Math.random() * 0.8, this.generation + 1, this.lastName));
 		}
-		if (this.life > this.puberty && this.constructor.name === 'Yellowin' && this.energy > 10000) {
+		if (
+			this.life > this.puberty &&
+			this.constructor.name === 'Yellowin' &&
+			this.energy > 10000 &&
+			this.life % 300 < 5
+		) {
 			yellowinArray.push(
 				new Yellowin(
 					this.x,
 					this.y,
 					this.baseVelocity * (1 + (Math.random() - 0.5) / 5),
 					this.generation + 1,
-					this.lastName
+					this.lastName,
+					this.adultRadius * (1 + (Math.random() - 0.5) / 5)
 				)
 			);
 			this.energy = this.energy - 5000;
@@ -336,30 +335,78 @@ class Greenae extends Organism {
 		super(x, y, baseVelocity, generation, lastName);
 		this.color = 'rgb(24, 222, 84)';
 		this.hierarchy = 0;
+		this.adultNutritionalEnergyValue = 10000;
 		this.lifeSpan = 1000 + Math.floor(Math.random() * 1200);
 		this.chanceToBreedBase = 0.004;
 		this.chanceToBreed = this.chanceToBreedBase;
 	}
 
+	breed() {
+		let distanceArray = [];
+		for (let index = 0; index < greenaeArray.length; index++) {
+			if (
+				Math.abs(this.x - greenaeArray[index].x) < this.radius * 5 &&
+				Math.abs(this.y - greenaeArray[index].y) < this.radius * 5
+			) {
+				distanceArray.push([ greenaeArray[index].x, greenaeArray[index].y ]);
+			}
+		}
+
+		for (let index = 0; index < 50; index++) {
+			let num;
+			let num2;
+			let touching = false;
+			Math.random() < 0.5 ? (num = 1) : (num = -1);
+			Math.random() < 0.5 ? (num2 = 1) : (num2 = -1);
+			let randomX = this.x + num * randomIntFromRange(this.radius * 2, this.radius * 5);
+			let randomY = this.y + num2 * randomIntFromRange(this.radius * 2, this.radius * 5);
+
+			for (let index = 0; index < distanceArray.length; index++) {
+				if (getDistance(randomX, randomY, distanceArray[index][0], distanceArray[index][1]) < this.radius * 2) {
+					touching = true;
+					break;
+				}
+			}
+
+			if (
+				touching === false &&
+				randomX > this.radius &&
+				randomX < canvas.width - this.radius &&
+				randomY > this.radius &&
+				randomY < canvas.height - this.radius
+			) {
+				greenaeArray.push(new Greenae(randomX, randomY, 0.0000001, this.generation + 1, this.lastName));
+				return;
+			}
+		}
+	}
+
 	mutate() {
-		if (Math.random() < this.chanceToMutate) {
+		if (Math.random() < this.chanceToMutate && yellowinArray.length < 6) {
 			yellowinArray.push(
-				new Yellowin(this.x, this.y, Math.random() * initialVelocity, this.generation, this.lastName)
+				new Yellowin(
+					this.x,
+					this.y,
+					Math.random() * initialVelocity,
+					this.generation,
+					this.lastName,
+					radiusArray[1] * (1 + (Math.random() - 0.5))
+				)
 			);
 		}
 	}
 }
 class Yellowin extends Organism {
-	constructor(x, y, baseVelocity, generation, lastName) {
+	constructor(x, y, baseVelocity, generation, lastName, adultRadius) {
 		super(x, y, baseVelocity, generation, lastName);
-		this.adultSize = sizesArray[1];
-		this.size = this.adultSize * Math.min(1, Math.max(0.25, this.life / this.puberty));
+		this.adultRadius = adultRadius;
+		this.radius = this.adultRadius * Math.min(1, Math.max(0.25, this.life / this.puberty));
 		this.diet = 'herbivore';
 		this.color = 'yellow';
 		this.hierarchy = 1;
 		this.energy = 5000;
 		this.opacity = this.energy / 20000;
-		this.energyLoss = 1 + 6 * Math.pow(this.velocity, 2) * this.size;
+		this.energyLoss = 1 + 6 * Math.pow(this.velocity, 2) * this.radius;
 	}
 
 	decompose() {
@@ -372,7 +419,7 @@ function clickToSpawn(e) {
 		canvas.removeEventListener('mousedown', clickToSpawn);
 		return;
 	}
-	greenaeArray.push(new Greenae(e.x, e.y, Math.random() * 0.4, 1, lastNameArray[lastNameCount]));
+	greenaeArray.push(new Greenae(e.x, e.y, 0.00000001, 1, lastNameArray[lastNameCount]));
 	lastNameCount++;
 	spawnCount++;
 }
@@ -384,7 +431,7 @@ function drawGreenaeAtMousePointer() {
 	}
 	canvas.style.cursor = 'pointer';
 	c.beginPath();
-	c.arc(mouse.x, mouse.y, sizesArray[0] * animateStartingGreenaeSizeVar, 0, Math.PI * 2, false);
+	c.arc(mouse.x, mouse.y, radiusArray[0] * animateStartingGreenaeSizeVar, 0, Math.PI * 2, false);
 
 	animateStartingGreenaeSizeVar < 1 && mouse.x !== null
 		? (animateStartingGreenaeSizeVar += 0.015)
@@ -411,8 +458,8 @@ function init() {
 	// for (let index = 0; index < 5; index++) {
 	// 	greenaeArray.push(
 	// 		new Greenae(
-	// 			randomIntFromRange(sizesArray[0] * 2, canvas.width - sizesArray[0] * 2),
-	// 			randomIntFromRange(sizesArray[0] * 2, canvas.height - sizesArray[0] * 2),
+	// 			randomIntFromRange(radiusArray[0] * 2, canvas.width - radiusArray[0] * 2),
+	// 			randomIntFromRange(radiusArray[0] * 2, canvas.height - radiusArray[0] * 2),
 	// 			Math.random() * 0.4,
 	// 			1,
 	// 			lastNameArray[lastNameCount]
@@ -482,16 +529,22 @@ function animate() {
 
 	// Check for collisions
 	for (var i = 0; i < yellowinArray.length; i++) {
-		if (yellowinArray[i].dead === true || yellowinArray[i].energy > 20000) {
+		if (
+			yellowinArray[i].dead === true ||
+			yellowinArray[i].energy > 20000 * Math.pow(yellowinArray[i].radius, 2) / Math.pow(radiusArray[1], 2)
+		) {
 			continue;
 		}
 		for (let j = 0; j < greenaeArray.length; j++) {
 			if (
 				getDistance(greenaeArray[j].x, greenaeArray[j].y, yellowinArray[i].x, yellowinArray[i].y) <
-				greenaeArray[j].size + yellowinArray[i].size
+				greenaeArray[j].radius + yellowinArray[i].radius
 			) {
 				yellowinArray[i].energy =
-					yellowinArray[i].energy + 4000 * greenaeArray[j].size / greenaeArray[j].adultSize;
+					yellowinArray[i].energy +
+					greenaeArray[j].adultNutritionalEnergyValue *
+						Math.pow(greenaeArray[j].radius, 2) /
+						Math.pow(greenaeArray[j].adultRadius, 2);
 				greenaeArray.splice(j, 1);
 			}
 		}
