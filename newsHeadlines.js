@@ -3,24 +3,24 @@ let YellowinPopulation = 0;
 let GreenaePopulation = 0;
 
 const headlines = {
-	spawn: '- You spawned your first Greenae! Greenae are small creatures that grow using sunlight.',
-	adulthood: '- Your first Greenae reaches adulthood! You can tell adults by their black skin.',
-	breed: '- Your Greenae just reproduced an offspring! Offsprings are small and have a white skin.',
-	death: '- Awww your first Greenae just died :( Dead Greenae have a green outer skin and transparent body.',
+	spawn: '- You spawned your first Greenae! Greenae are small plants that grow using sunlight.',
+	adulthood: '- Your first Greenae reaches adulthood! You can tell adults by their black exterior.',
+	breed: '- Your Greenae just reproduced! Greenae seedlings are small and have a white exterior.',
+	death: '- Awww your first Greenae just died :( Dead Greenae have a green exterior and transparent body.',
 	yellowinMutated: '- Woah! One of your Greenae just mutated into a Yellowin, a new species!',
 	yellowinEats: '- Looks like Yellowin love to eat Greenae. Not sure how I feel about that...',
 	yellowinNoEnergy:
 		'- A Yellowin just died from hunger! Yellowin must eat Greenae to survive and fade when they are starving.',
 	sunlight: '- Woah so bright! Greenae love more sun, I think it makes them reproduce a lot faster.',
 	fastForward: '- Hyperspeed! Fast forwarding time makes everything faster!',
-	planted5: '- Seeding 5 Greenae should be enough to start them off. They can grow themselves from here.',
+	planted5: '- Seeding 5 Greenae should be enough to start them off. They can grow by themselves from here.',
 	moreYellowinThanGreenae: '- Wow the Yellowin have really taken over! There are more of them than Greenae now.',
 	healthyPopulationGreenae:
 		'- Your Greenae population has finally grown to a healthy level! See population status below.',
 	yellowinExtinct:
 		'- Aww no your Yellowin population just went extinct! Hopefully another Greenae might mutate into a Yellowin soon.',
 	greenaeExtinct:
-		"Aww no your Greenae population just went extinct! Without this primary producer, your ecosystem can't survive unfortunately. Restart to try again!"
+		"Aww no your Greenae population just went extinct! Without them your ecosystem can't survive unfortunately. Restart to try again!"
 };
 
 function checkForHeadlines() {

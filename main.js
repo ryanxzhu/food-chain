@@ -565,8 +565,8 @@ function animate() {
 	// Check for headlines
 	checkForHeadlines();
 
+	// update each Organism and draw the next frame
 	for (let index = 0; index < speciesArray.length; index++) {
-		// update each Organism and draw the next frame
 		speciesArray[index].forEach((e) => e.update());
 
 		// Update bottom status bar
@@ -577,6 +577,12 @@ function animate() {
 			speciesArray[index].hasMutated = true;
 		}
 	}
+
+	let totalOrganisms = 0;
+	for (let index = 0; index < speciesArray.length; index++) {
+		totalOrganisms = totalOrganisms + speciesArray[index].length;
+	}
+	console.log(totalOrganisms);
 }
 
 function initialiseStatusInfo(array) {
