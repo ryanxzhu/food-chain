@@ -3,6 +3,7 @@ const infoBox = document.querySelector('#infoBox');
 const newsfeed = document.querySelector('#newsfeed');
 const c = canvas.getContext('2d');
 const statusBox = document.querySelector('#statusBox');
+const organismStatus = document.querySelector('#organismStatus');
 const controlsSection = document.querySelector('#controls');
 const sunlightSlider = document.querySelector('#sunlightSlider');
 const worldSpeedSlider = document.querySelector('#worldSpeedSlider');
@@ -45,6 +46,7 @@ for (let index = 0; index < 7; index++) {
 	radiusArray.push(8 * Math.pow(2, index));
 	Math.random() < 0.5 ? dietArray.push('carnivore') : dietArray.push('herbivore');
 	makeStatusBoxShell();
+	makeOrganismStatusShell();
 }
 
 var gameSpeed = gameSpeedArray[0];
@@ -60,6 +62,14 @@ const statusDivs = statusBox.querySelectorAll('.statusDiv');
 const speciesCountNodeList = statusBox.querySelectorAll('.speciesCount');
 const speciesCircleNodeList = statusBox.querySelectorAll('.speciesCircle');
 const speciesNameNodeList = statusBox.querySelectorAll('.speciesName');
+const organismDivs = organismStatus.querySelectorAll('.statusDiv');
+const organismCountNodeList = organismStatus.querySelectorAll('.speciesCount');
+const organismCircleNodeList = organismStatus.querySelectorAll('.speciesCircle');
+const organismNameNodeList = organismStatus.querySelectorAll('.speciesName');
+const redListNodeList = organismStatus.querySelectorAll('.redList');
+const oldestGenNodeList = organismStatus.querySelectorAll('.statusDiv p:nth-of-type(3)');
+const aveSizeNodeList = organismStatus.querySelectorAll('.statusDiv p:nth-of-type(4)');
+const aveSpeedNodeList = organismStatus.querySelectorAll('.statusDiv p:nth-of-type(5)');
 
 //Utility Functions
 
@@ -303,6 +313,7 @@ class Organism {
 			this.breed();
 			// greenaeArray.push(new Greenae(this.x, this.y, Math.random() * 0.8, this.generation + 1, this.lastName));
 		}
+
 		if (
 			this.life > this.puberty &&
 			this.constructor.name === 'Yellowin' &&
@@ -321,6 +332,27 @@ class Organism {
 				)
 			);
 			this.energy = this.energy - 5000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[1], 2);
+			this.mutate();
+		}
+
+		if (
+			this.life > this.puberty &&
+			this.constructor.name === 'Oranget' &&
+			this.energy > 20000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[1], 2) &&
+			this.life % 300 < 5
+		) {
+			orangetArray.push(
+				new Oranget(
+					this.x,
+					this.y,
+					this.baseVelocity * (1 + (Math.random() - 0.5) / 5),
+					this.generation + 1,
+					this.lastName,
+					this.adultRadius * (1 + (Math.random() - 0.5) / 5),
+					10000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[1], 2) / 2
+				)
+			);
+			this.energy = this.energy - 5000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[2], 2);
 		}
 
 		// draw
@@ -392,7 +424,7 @@ class Greenae extends Organism {
 					this.y,
 					Math.min(0.33, Math.random()) * initialVelocity,
 					// initialVelocity,
-					this.generation,
+					1,
 					this.lastName,
 					radiusArray[1] * (1 + (Math.random() - 0.5)),
 					5000
@@ -401,23 +433,55 @@ class Greenae extends Organism {
 		}
 	}
 }
-class Yellowin extends Organism {
+
+class Heterotroph extends Organism {
 	constructor(x, y, baseVelocity, generation, lastName, adultRadius, energy) {
 		super(x, y, baseVelocity, generation, lastName);
 		this.adultRadius = adultRadius;
 		this.radius = this.adultRadius * Math.min(1, Math.max(0.25, this.life / this.puberty));
+		this.energy = energy;
+		this.energyLoss = 3 * this.radius + 3 * this.velocity * this.radius;
+	}
+}
+
+class Yellowin extends Heterotroph {
+	constructor(x, y, baseVelocity, generation, lastName, adultRadius, energy) {
+		super(x, y, baseVelocity, generation, lastName, adultRadius, energy);
 		this.diet = 'herbivore';
 		this.color = 'yellow';
 		this.hierarchy = 1;
 		// this.energy = 5000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[1], 2);
-		this.energy = energy;
+		this.adultNutritionalEnergyValue = 20000 * Math.pow(adultRadius, 2) / Math.pow(radiusArray[1], 2);
 		this.opacity = this.energy / (20000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[1], 2));
 		// this.energyLoss = 1 + 6 * Math.pow(this.velocity, 2) * this.radius;
-		this.energyLoss = 3 * this.radius + 3 * this.velocity * this.radius;
 	}
 
-	decompose() {
-		yellowinArray.splice(yellowinArray.indexOf(this), 1);
+	mutate() {
+		if (Math.random() < this.chanceToMutate && orangetArray.length < 6) {
+			orangetArray.push(
+				new Oranget(
+					this.x,
+					this.y,
+					Math.min(0.33, Math.random()) * initialVelocity,
+					// initialVelocity,
+					1,
+					this.lastName,
+					radiusArray[2] * (1 + (Math.random() - 0.5)),
+					10000
+				)
+			);
+		}
+	}
+}
+
+class Oranget extends Heterotroph {
+	constructor(x, y, baseVelocity, generation, lastName, adultRadius, energy) {
+		super(x, y, baseVelocity, generation, lastName, adultRadius, energy);
+		this.diet = 'carnivore';
+		this.color = 'orange';
+		this.hierarchy = 2;
+		this.adultNutritionalEnergyValue = 40000 * Math.pow(adultRadius, 2) / Math.pow(radiusArray[2], 2);
+		this.opacity = this.energy / (20000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[2], 2));
 	}
 }
 
@@ -519,6 +583,21 @@ function init() {
 
 	h4Container[1].style.left = '0px';
 	h4Container[0].style.left = '140px';
+
+	for (let i = 0; i < statusDivs.length; i++) {
+		statusDivs[i].addEventListener('mouseover', function() {
+			organismStatus.style.transform = 'translateX(-200px)';
+			organismDivs[i].style.display = 'block';
+			statusDivs[i].style.backgroundColor = 'rgb(30, 30, 30)';
+			statusDivs[i].style.cursor = 'context-menu';
+		});
+		statusDivs[i].addEventListener('mouseout', function() {
+			organismStatus.style.transform = 'translateX(200px)';
+			organismDivs[i].style.display = 'none';
+			statusDivs[i].style.backgroundColor = 'rgb(35, 35, 35)';
+			statusDivs[i].style.cursor = 'default';
+		});
+	}
 }
 
 //Animation loop
@@ -557,6 +636,33 @@ function animate() {
 		}
 	}
 
+	for (var i = 0; i < orangetArray.length; i++) {
+		if (
+			orangetArray[i].dead === true ||
+			orangetArray[i].energy > 40000 * Math.pow(orangetArray[i].radius, 2) / Math.pow(radiusArray[2], 2)
+		) {
+			continue;
+		}
+		for (let j = 0; j < yellowinArray.length; j++) {
+			if (orangetArray[i].radius < yellowinArray[j].radius && yellowinArray[j].dead === false) {
+				continue;
+			}
+			if (
+				getDistance(yellowinArray[j].x, yellowinArray[j].y, orangetArray[i].x, orangetArray[i].y) <
+				yellowinArray[j].radius + orangetArray[i].radius
+			) {
+				orangetArray[i].energy =
+					orangetArray[i].energy +
+					yellowinArray[j].adultNutritionalEnergyValue *
+						Math.pow(yellowinArray[j].radius, 2) /
+						Math.pow(yellowinArray[j].adultRadius, 2);
+				yellowinArray.splice(j, 1);
+			}
+		}
+	}
+
+	// console.log(OrangetArray[Math.floor(OrangetArray.length / 2)]);
+
 	// clear canvas
 	c.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -582,13 +688,15 @@ function animate() {
 	for (let index = 0; index < speciesArray.length; index++) {
 		totalOrganisms = totalOrganisms + speciesArray[index].length;
 	}
-	console.log(totalOrganisms);
+	// console.log(totalOrganisms);
 }
 
 function initialiseStatusInfo(array) {
 	speciesCountNodeList[array[0].hierarchy].textContent = array.length;
 	speciesCircleNodeList[array[0].hierarchy].style.backgroundColor = array[0].color;
 	speciesNameNodeList[array[0].hierarchy].textContent = array.nameOfOrganism;
+	organismNameNodeList[array[0].hierarchy].textContent = array.nameOfOrganism;
+	organismCircleNodeList[array[0].hierarchy].style.backgroundColor = array[0].color;
 	statusDivs[array[0].hierarchy].style.display = 'flex';
 }
 
@@ -605,37 +713,114 @@ function makeStatusBoxShell() {
 	let statusSpeciesName = document.createElement('span');
 	statusSpeciesName.classList.add('speciesName');
 	statusDiv.appendChild(statusSpeciesName);
-	let statusSpeciesDescription = document.createElement('span');
-	statusSpeciesDescription.classList.add('speciesDescription');
-	statusDiv.appendChild(statusSpeciesDescription);
 	statusDiv.style.display = 'none';
 	statusBox.appendChild(statusDiv);
 }
 
 function updatePopulation(array, i) {
+	let oldestGeneration = 0;
 	let populationCount = 0;
+	let totalSize = 0;
+	let totalVelocity = 0;
 	array.forEach(function(e) {
-		e.dead === false ? populationCount++ : populationCount;
+		if (e.dead === false) {
+			populationCount++;
+			totalSize = totalSize + Math.PI * Math.pow(e.adultRadius, 2) / 100;
+			totalVelocity = totalVelocity + 10 * e.baseVelocity;
+		}
+		e.generation > oldestGeneration ? (oldestGeneration = e.generation) : oldestGeneration;
 	});
 
+	let averageSize = Math.floor(totalSize / populationCount);
+	let averageVelocity = totalVelocity / populationCount;
+	averageVelocity = averageVelocity.toFixed(1);
+
+	averageSize > 0
+		? (aveSizeNodeList[i].textContent = 'Average Adult Size: ' + averageSize + 'kg')
+		: (aveSizeNodeList[i].textContent = 'Average Adult Size: 0kg');
+
+	averageVelocity >= 0
+		? (aveSpeedNodeList[i].textContent = 'Average Speed: ' + averageVelocity + 'km/hr')
+		: (aveSpeedNodeList[i].textContent = 'Average Speed: 0.0km/hr');
+	oldestGenNodeList[i].textContent = 'Oldest Generation: ' + oldestGeneration;
+
+	let extinctColor = 'rgb(80, 80, 80)';
+	let criticalColor = 'red';
+	let endangeredColor = 'orange';
+	let vulnerableColor = 'yellow';
+	let healthyColor = 'white';
+
 	if (populationCount === 0) {
-		speciesCountNodeList[i].style.color = 'rgb(80, 80, 80)';
-		speciesNameNodeList[i].style.color = 'rgb(80, 80, 80)';
+		speciesCountNodeList[i].style.color = extinctColor;
+		speciesNameNodeList[i].style.color = extinctColor;
+		// organismNameNodeList[i].style.color = extinctColor;
+		organismCountNodeList[i].style.color = extinctColor;
+		redListNodeList[i].style.color = extinctColor;
+		redListNodeList[i].textContent = 'Extinct';
 	} else if (populationCount < 11) {
-		speciesCountNodeList[i].style.color = 'red';
-		speciesNameNodeList[i].style.color = 'red';
+		speciesCountNodeList[i].style.color = criticalColor;
+		speciesNameNodeList[i].style.color = criticalColor;
+		// organismNameNodeList[i].style.color = criticalColor;
+		organismCountNodeList[i].style.color = criticalColor;
+		redListNodeList[i].style.color = criticalColor;
+		redListNodeList[i].textContent = 'Critical';
 	} else if (populationCount < 50) {
-		speciesCountNodeList[i].style.color = 'orange';
-		speciesNameNodeList[i].style.color = 'orange';
+		speciesCountNodeList[i].style.color = endangeredColor;
+		speciesNameNodeList[i].style.color = endangeredColor;
+		// organismNameNodeList[i].style.color = endangeredColor;
+		organismCountNodeList[i].style.color = endangeredColor;
+		redListNodeList[i].style.color = endangeredColor;
+		redListNodeList[i].textContent = 'Endangered';
 	} else if (populationCount < 200) {
-		speciesCountNodeList[i].style.color = 'yellow';
-		speciesNameNodeList[i].style.color = 'yellow';
+		speciesCountNodeList[i].style.color = vulnerableColor;
+		speciesNameNodeList[i].style.color = vulnerableColor;
+		// organismNameNodeList[i].style.color = vulnerableColor;
+		organismCountNodeList[i].style.color = vulnerableColor;
+		redListNodeList[i].style.color = vulnerableColor;
+		redListNodeList[i].textContent = 'Vulnerable';
 	} else {
-		speciesCountNodeList[i].style.color = 'white';
-		speciesNameNodeList[i].style.color = 'white';
+		speciesCountNodeList[i].style.color = healthyColor;
+		speciesNameNodeList[i].style.color = healthyColor;
+		// organismNameNodeList[i].style.color = healthyColor;
+		organismCountNodeList[i].style.color = healthyColor;
+		redListNodeList[i].style.color = healthyColor;
+		redListNodeList[i].textContent = 'Healthy';
 	}
 	speciesCountNodeList[i].textContent = populationCount;
+	organismCountNodeList[i].textContent = populationCount;
 	return;
+}
+
+// Organism Status
+function makeOrganismStatusShell() {
+	let organismDiv = document.createElement('div');
+	organismDiv.classList.add('statusDiv');
+	let smallContainer = document.createElement('div');
+	let statusSpeciesCircle = document.createElement('div');
+	statusSpeciesCircle.classList.add('speciesCircle');
+	smallContainer.appendChild(statusSpeciesCircle);
+	let statusSpeciesName = document.createElement('span');
+	statusSpeciesName.classList.add('speciesName');
+	statusSpeciesName.textContent = 'Greenae';
+	smallContainer.appendChild(statusSpeciesName);
+	organismDiv.appendChild(smallContainer);
+	let popCount = document.createElement('p');
+	popCount.innerHTML = 'Population Count: <span class="speciesCount"></span>';
+	organismDiv.appendChild(popCount);
+	let popStatus = document.createElement('p');
+	popStatus.innerHTML = 'Status: <span class="redList"></span>';
+	organismDiv.appendChild(popStatus);
+	let oldestGen = document.createElement('p');
+	oldestGen.textContent = 'Oldest Generation: 6';
+	organismDiv.appendChild(oldestGen);
+	let aveSize = document.createElement('p');
+	aveSize.textContent = 'Average Adult Size: ';
+	organismDiv.appendChild(aveSize);
+	let aveSpeed = document.createElement('p');
+	aveSpeed.textContent = 'Average Speed: ';
+	organismDiv.appendChild(aveSpeed);
+	organismDiv.style.display = 'none';
+	organismStatus.appendChild(organismDiv);
 }
 
 init();

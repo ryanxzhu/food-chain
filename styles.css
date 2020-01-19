@@ -21,6 +21,7 @@ canvas {
 	right: 0;
 	font-family: 'Courier New', Courier, monospace;
 	overflow: hidden;
+	z-index: 1;
 }
 
 .headline {
@@ -56,6 +57,7 @@ h1 {
 	top: -100px;
 	background: rgb(245, 245, 245);
 	transition: transform 0.2s ease-in-out;
+	z-index: 2;
 }
 
 .normalPos {
@@ -177,7 +179,7 @@ input:not(:active) + #h4-container h4 {
 }
 
 #statusBox div {
-	margin: 2px 0px 2px 2px;
+	margin: 2px 0px 2px 0px;
 	display: flex;
 	align-items: center;
 	justify-content: left;
@@ -238,4 +240,34 @@ input:not(:active) + #h4-container h4 {
 		-webkit-transform: translateY(-12px);
 		transform: translateY(-12px);
 	}
+}
+
+#organismStatus {
+	position: absolute;
+	right: -20px;
+	bottom: 0;
+	padding: 20px;
+	width: 180px;
+	height: 150px;
+	color: white;
+	font-size: 15px;
+	font-family: 'Courier New', Courier, monospace;
+	border-top-left-radius: 20px;
+	background-color: rgb(30, 30, 30);
+	transition: transform 0.1s ease-in-out;
+}
+
+#organismStatus p {
+	font-size: 12px;
+	line-height: 15px;
+}
+
+#organismStatus > div > div {
+	display: flex;
+	align-items: center;
+	justify-content: left;
+}
+
+#organismStatus .statusDiv .speciesName {
+	color: white;
 }
