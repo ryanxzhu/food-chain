@@ -1,6 +1,7 @@
 let newsArray = [];
 let YellowinPopulation = 0;
 let GreenaePopulation = 0;
+let OrangetPopulation = 0;
 
 const headlines = {
 	spawn: '- You spawned your first Greenae! Greenae are small plants that grow using sunlight.',
@@ -20,7 +21,10 @@ const headlines = {
 	yellowinExtinct:
 		'- Aww no your Yellowin population just went extinct! Hopefully another Greenae might mutate into a Yellowin soon.',
 	greenaeExtinct:
-		"Aww no your Greenae population just went extinct! Without them your ecosystem can't survive unfortunately. Restart to try again!"
+		"Aww no your Greenae population just went extinct! Without them your ecosystem can't survive unfortunately. Restart to try again!",
+	orangetMutated: '- Wow what is that? Is that an Oranget I see?!!',
+	orangetExtinct: "- It's a tough life out there for Oranget, they can only eat Yellowin and there's so little food.",
+	orangetEats: '- If I look carefully, it looks like the Oranget eat the Yellowin. How brutal.'
 };
 
 function checkForHeadlines() {
@@ -138,6 +142,35 @@ function checkForHeadlines() {
 		if (tempPopulation === 0 && GreenaePopulation > 0) {
 			reportNews('greenaeExtinct');
 		}
+	}
+
+	if (headlines['orangetMutated'] !== null) {
+		if (orangetArray.length > 0) {
+			reportNews('orangetMutated');
+		}
+	}
+
+	if (headlines['orangetExtinct'] !== null) {
+		let tempPopulation = 0;
+		orangetArray.forEach((e) => {
+			if (e.dead !== true) {
+				tempPopulation++;
+			}
+		});
+		if (tempPopulation > 10) {
+			OrangetPopulation = tempPopulation;
+		}
+		if (tempPopulation === 0 && OrangetPopulation > 5) {
+			reportNews('orangetExtinct');
+		}
+	}
+
+	if (headlines['orangetEats'] !== null) {
+		orangetArray.forEach((e) => {
+			if (e.energy > 20000) {
+				reportNews('orangetEats');
+			}
+		});
 	}
 }
 

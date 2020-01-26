@@ -13,12 +13,18 @@ const gameSpeedArray = [ 1, 2, 3, 4 ];
 const radiusArray = [];
 const dietArray = [];
 const runOneTime = [];
+
+let initialVelocity = 1;
+let greenaeAlive = 0;
+let yellowinAlive = 0;
+let orangetAlive = 0;
+
 var firstNameCount = 0;
 var lastNameCount = 0;
 var numOfSpecies = 0;
 var spawnCount = 0;
 var animateStartingGreenaeSizeVar = 0;
-
+const brownColorArray = createBrownArray();
 let greenaeArray = [];
 let yellowinArray = [];
 let orangetArray = [];
@@ -55,8 +61,6 @@ var mouse = {
 	x: null,
 	y: null
 };
-
-let initialVelocity = 1;
 
 const statusDivs = statusBox.querySelectorAll('.statusDiv');
 const speciesCountNodeList = statusBox.querySelectorAll('.speciesCount');
@@ -154,9 +158,11 @@ class Organism {
 		this.yVelocity = 0;
 		this.dead = false;
 		this.life = 1;
-		this.puberty = 400 + Math.floor(Math.random() * 800);
-		this.lifeSpan = 3000 + Math.floor(Math.random() * 1200);
+		this.lifeSpan = Math.floor(Math.random() * 4200);
+		this.puberty = this.lifeSpan * 0.5;
 		this.radius = this.adultRadius * Math.min(1, Math.max(0.25, this.life / this.puberty));
+		this.nutritionalValue = 1250 * this.radius / 2;
+		this.energyLoss = 0;
 		this.death = 0;
 		this.deathSpan = 1000;
 		this.chanceToMutateBase = 0.01;
@@ -269,11 +275,12 @@ class Organism {
 
 		// growth
 		this.radius = this.adultRadius * Math.min(1, Math.max(0.25, this.life / this.puberty));
+		this.nutritionalValue = 1250 * this.radius / 2;
 
 		// energy loss
-		this.energyLoss = 3 * this.radius + 3 * this.velocity * this.radius;
+		this.energyLoss = 1 * this.adultRadius + 0.3 * this.velocity * this.radius;
 		this.energy = this.energy - this.energyLoss;
-		this.opacity = Math.max(this.energy / 10000, 0);
+		this.opacity = Math.max(this.energy / (1250 * this.radius), 0);
 
 		// movement
 		this.velocity = this.baseVelocity * gameSpeed;
@@ -303,56 +310,18 @@ class Organism {
 		// breeding and evolving
 		this.chanceToBreed = this.chanceToBreedBase * gameSpeed * sunlightFraction;
 		this.chanceToMutate = this.chanceToMutateBase * gameSpeed;
-		if (
-			this.life > this.puberty &&
-			Math.random() < this.chanceToBreed &&
-			this.constructor.name === 'Greenae'
-			// greenaeArray.length + yellowinArray.length < 1500
-		) {
-			this.mutate();
+		if (this.life > this.puberty && Math.random() < this.chanceToBreed && this.constructor.name === 'Greenae') {
 			this.breed();
-			// greenaeArray.push(new Greenae(this.x, this.y, Math.random() * 0.8, this.generation + 1, this.lastName));
-		}
-
-		if (
-			this.life > this.puberty &&
-			this.constructor.name === 'Yellowin' &&
-			this.energy > 10000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[1], 2) &&
-			this.life % 300 < 5
-		) {
-			yellowinArray.push(
-				new Yellowin(
-					this.x,
-					this.y,
-					this.baseVelocity * (1 + (Math.random() - 0.5) / 5),
-					this.generation + 1,
-					this.lastName,
-					this.adultRadius * (1 + (Math.random() - 0.5) / 5),
-					5000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[1], 2) / 2
-				)
-			);
-			this.energy = this.energy - 5000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[1], 2);
 			this.mutate();
 		}
 
 		if (
-			this.life > this.puberty &&
-			this.constructor.name === 'Oranget' &&
-			this.energy > 20000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[1], 2) &&
-			this.life % 300 < 5
+			this.life > this.puberty * 1.66 &&
+			this.energy >= 1250 * this.adultRadius &&
+			this.constructor.name !== 'Greenae'
 		) {
-			orangetArray.push(
-				new Oranget(
-					this.x,
-					this.y,
-					this.baseVelocity * (1 + (Math.random() - 0.5) / 5),
-					this.generation + 1,
-					this.lastName,
-					this.adultRadius * (1 + (Math.random() - 0.5) / 5),
-					10000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[1], 2) / 2
-				)
-			);
-			this.energy = this.energy - 5000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[2], 2);
+			this.breed();
+			this.mutate();
 		}
 
 		// draw
@@ -365,10 +334,15 @@ class Greenae extends Organism {
 		super(x, y, baseVelocity, generation, lastName);
 		this.color = 'rgb(24, 222, 84)';
 		this.hierarchy = 0;
-		this.adultNutritionalEnergyValue = 10000;
 		this.lifeSpan = 1000 + Math.floor(Math.random() * 1200);
+		this.puberty = this.lifeSpan * 0.5;
 		this.chanceToBreedBase = 0.004;
 		this.chanceToBreed = this.chanceToBreedBase;
+		this.nutritionalValue = 1250 * this.radius / 4;
+	}
+
+	updateNutritionalValue() {
+		this.nutritionalValue = 1250 * this.radius / 4;
 	}
 
 	breed() {
@@ -422,11 +396,10 @@ class Greenae extends Organism {
 				new Yellowin(
 					this.x,
 					this.y,
-					Math.min(0.33, Math.random()) * initialVelocity,
-					// initialVelocity,
+					initialVelocity / 2 * (1 + (Math.random() - 0.5)),
 					1,
 					this.lastName,
-					radiusArray[1] * (1 + (Math.random() - 0.5)),
+					this.radius * 2 * (1 + (Math.random() - 0.5)),
 					5000
 				)
 			);
@@ -440,7 +413,12 @@ class Heterotroph extends Organism {
 		this.adultRadius = adultRadius;
 		this.radius = this.adultRadius * Math.min(1, Math.max(0.25, this.life / this.puberty));
 		this.energy = energy;
-		this.energyLoss = 3 * this.radius + 3 * this.velocity * this.radius;
+		this.nutritionalValue = 1250 * this.radius * 2;
+		this.breedCount = 0;
+	}
+
+	updateNutritionalValue() {
+		this.nutritionalValue = 1250 * this.radius * 2;
 	}
 }
 
@@ -450,10 +428,27 @@ class Yellowin extends Heterotroph {
 		this.diet = 'herbivore';
 		this.color = 'yellow';
 		this.hierarchy = 1;
-		// this.energy = 5000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[1], 2);
-		this.adultNutritionalEnergyValue = 20000 * Math.pow(adultRadius, 2) / Math.pow(radiusArray[1], 2);
-		this.opacity = this.energy / (20000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[1], 2));
-		// this.energyLoss = 1 + 6 * Math.pow(this.velocity, 2) * this.radius;
+		this.opacity = this.energy / (1250 * this.radius);
+	}
+
+	breed() {
+		if (yellowinAlive < greenaeAlive / 10) {
+			yellowinArray.push(
+				new Yellowin(
+					this.x,
+					this.y,
+					this.baseVelocity * (1 + (Math.random() - 0.5) / 5),
+					this.generation + 1,
+					this.lastName,
+					this.adultRadius * (1 + (Math.random() - 0.5) / 5),
+					1250 * this.adultRadius / 4
+				)
+			);
+			this.breedCount++;
+
+			this.energy = this.energy - 1250 * this.adultRadius / 2;
+			this.mutate();
+		}
 	}
 
 	mutate() {
@@ -463,10 +458,9 @@ class Yellowin extends Heterotroph {
 					this.x,
 					this.y,
 					Math.min(0.33, Math.random()) * initialVelocity,
-					// initialVelocity,
 					1,
 					this.lastName,
-					radiusArray[2] * (1 + (Math.random() - 0.5)),
+					this.adultRadius * 2,
 					10000
 				)
 			);
@@ -480,9 +474,27 @@ class Oranget extends Heterotroph {
 		this.diet = 'carnivore';
 		this.color = 'orange';
 		this.hierarchy = 2;
-		this.adultNutritionalEnergyValue = 40000 * Math.pow(adultRadius, 2) / Math.pow(radiusArray[2], 2);
-		this.opacity = this.energy / (20000 * Math.pow(this.radius, 2) / Math.pow(radiusArray[2], 2));
+		this.opacity = this.energy / (1250 * this.radius);
 	}
+
+	breed() {
+		if (this.life > this.puberty && orangetAlive < yellowinAlive / 10) {
+			orangetArray.push(
+				new Oranget(
+					this.x,
+					this.y,
+					this.baseVelocity * (1 + (Math.random() - 0.5) / 5),
+					this.generation + 1,
+					this.lastName,
+					this.adultRadius * (1 + (Math.random() - 0.5) / 5),
+					1250 * this.adultRadius / 4
+				)
+			);
+			this.energy = this.energy - 1250 * this.adultRadius / 2;
+		}
+	}
+
+	mutate() {}
 }
 
 function clickToSpawn(e) {
@@ -526,22 +538,7 @@ function init() {
 	canvas.height = innerHeight;
 	infoBox.height = innerHeight;
 
-	// for (let index = 0; index < 5; index++) {
-	// 	greenaeArray.push(
-	// 		new Greenae(
-	// 			randomIntFromRange(radiusArray[0] * 2, canvas.width - radiusArray[0] * 2),
-	// 			randomIntFromRange(radiusArray[0] * 2, canvas.height - radiusArray[0] * 2),
-	// 			Math.random() * 0.4,
-	// 			1,
-	// 			lastNameArray[lastNameCount]
-	// 		)
-	// 	);
-
-	// 	lastNameCount++;
-	// }
 	canvas.addEventListener('mousedown', clickToSpawn);
-
-	const brownColorArray = createBrownArray();
 
 	canvas.style.backgroundColor = brownColorArray[50];
 
@@ -615,10 +612,7 @@ function animate() {
 
 	// Check for collisions
 	for (var i = 0; i < yellowinArray.length; i++) {
-		if (
-			yellowinArray[i].dead === true ||
-			yellowinArray[i].energy > 20000 * Math.pow(yellowinArray[i].radius, 2) / Math.pow(radiusArray[1], 2)
-		) {
+		if (yellowinArray[i].dead === true || yellowinArray[i].energy > 1250 * yellowinArray[i].radius) {
 			continue;
 		}
 		for (let j = 0; j < greenaeArray.length; j++) {
@@ -626,21 +620,14 @@ function animate() {
 				getDistance(greenaeArray[j].x, greenaeArray[j].y, yellowinArray[i].x, yellowinArray[i].y) <
 				greenaeArray[j].radius + yellowinArray[i].radius
 			) {
-				yellowinArray[i].energy =
-					yellowinArray[i].energy +
-					greenaeArray[j].adultNutritionalEnergyValue *
-						Math.pow(greenaeArray[j].radius, 2) /
-						Math.pow(greenaeArray[j].adultRadius, 2);
+				yellowinArray[i].energy = yellowinArray[i].energy + greenaeArray[j].nutritionalValue / 2;
 				greenaeArray.splice(j, 1);
 			}
 		}
 	}
 
 	for (var i = 0; i < orangetArray.length; i++) {
-		if (
-			orangetArray[i].dead === true ||
-			orangetArray[i].energy > 40000 * Math.pow(orangetArray[i].radius, 2) / Math.pow(radiusArray[2], 2)
-		) {
+		if (orangetArray[i].dead === true || orangetArray[i].energy > 1250 * orangetArray[i].radius) {
 			continue;
 		}
 		for (let j = 0; j < yellowinArray.length; j++) {
@@ -651,17 +638,11 @@ function animate() {
 				getDistance(yellowinArray[j].x, yellowinArray[j].y, orangetArray[i].x, orangetArray[i].y) <
 				yellowinArray[j].radius + orangetArray[i].radius
 			) {
-				orangetArray[i].energy =
-					orangetArray[i].energy +
-					yellowinArray[j].adultNutritionalEnergyValue *
-						Math.pow(yellowinArray[j].radius, 2) /
-						Math.pow(yellowinArray[j].adultRadius, 2);
+				orangetArray[i].energy = orangetArray[i].energy + yellowinArray[j].nutritionalValue * 4;
 				yellowinArray.splice(j, 1);
 			}
 		}
 	}
-
-	// console.log(OrangetArray[Math.floor(OrangetArray.length / 2)]);
 
 	// clear canvas
 	c.clearRect(0, 0, canvas.width, canvas.height);
@@ -670,6 +651,30 @@ function animate() {
 
 	// Check for headlines
 	checkForHeadlines();
+
+	greenaeAlive = checkPopulation(greenaeAlive, greenaeArray);
+	yellowinAlive = checkPopulation(yellowinAlive, yellowinArray);
+	orangetAlive = checkPopulation(orangetAlive, orangetArray);
+
+	console.log(greenaeAlive, yellowinAlive, orangetAlive);
+	/*************************************************** TO BE DELETED  *********************************************************/
+	// adjust sunlight
+	// let greenaePop = 0;
+	// greenaeArray.forEach((e) => {
+	// 	if (e.dead !== true) {
+	// 		greenaePop++;
+	// 	}
+	// });
+	// if (greenaePop > 600) {
+	// 	sunlightFraction = 0.3;
+	// } else if (greenaePop < 550) {
+	// 	sunlightFraction = 2;
+	// } else {
+	// 	sunlightFraction = 0.8;
+	// }
+	// let valueInt = Math.floor(sunlightFraction * 50);
+	// canvas.style.backgroundColor = brownColorArray[valueInt];
+	/***************************************************************************************************************************/
 
 	// update each Organism and draw the next frame
 	for (let index = 0; index < speciesArray.length; index++) {
@@ -688,7 +693,6 @@ function animate() {
 	for (let index = 0; index < speciesArray.length; index++) {
 		totalOrganisms = totalOrganisms + speciesArray[index].length;
 	}
-	// console.log(totalOrganisms);
 }
 
 function initialiseStatusInfo(array) {
@@ -731,17 +735,18 @@ function updatePopulation(array, i) {
 		e.generation > oldestGeneration ? (oldestGeneration = e.generation) : oldestGeneration;
 	});
 
-	let averageSize = Math.floor(totalSize / populationCount);
+	let averageSize = totalSize / populationCount;
+	averageSize = averageSize.toFixed(1);
 	let averageVelocity = totalVelocity / populationCount;
 	averageVelocity = averageVelocity.toFixed(1);
 
 	averageSize > 0
-		? (aveSizeNodeList[i].textContent = 'Average Adult Size: ' + averageSize + 'kg')
-		: (aveSizeNodeList[i].textContent = 'Average Adult Size: 0kg');
+		? (aveSizeNodeList[i].textContent = 'Ave Adult Size: ' + averageSize + 'kg')
+		: (aveSizeNodeList[i].textContent = 'Ave Adult Size: 0kg');
 
 	averageVelocity >= 0
-		? (aveSpeedNodeList[i].textContent = 'Average Speed: ' + averageVelocity + 'km/hr')
-		: (aveSpeedNodeList[i].textContent = 'Average Speed: 0.0km/hr');
+		? (aveSpeedNodeList[i].textContent = 'Ave Speed: ' + averageVelocity + 'km/hr')
+		: (aveSpeedNodeList[i].textContent = 'Ave Speed: 0.0km/hr');
 	oldestGenNodeList[i].textContent = 'Oldest Generation: ' + oldestGeneration;
 
 	let extinctColor = 'rgb(80, 80, 80)';
@@ -753,35 +758,30 @@ function updatePopulation(array, i) {
 	if (populationCount === 0) {
 		speciesCountNodeList[i].style.color = extinctColor;
 		speciesNameNodeList[i].style.color = extinctColor;
-		// organismNameNodeList[i].style.color = extinctColor;
 		organismCountNodeList[i].style.color = extinctColor;
 		redListNodeList[i].style.color = extinctColor;
 		redListNodeList[i].textContent = 'Extinct';
 	} else if (populationCount < 11) {
 		speciesCountNodeList[i].style.color = criticalColor;
 		speciesNameNodeList[i].style.color = criticalColor;
-		// organismNameNodeList[i].style.color = criticalColor;
 		organismCountNodeList[i].style.color = criticalColor;
 		redListNodeList[i].style.color = criticalColor;
 		redListNodeList[i].textContent = 'Critical';
 	} else if (populationCount < 50) {
 		speciesCountNodeList[i].style.color = endangeredColor;
 		speciesNameNodeList[i].style.color = endangeredColor;
-		// organismNameNodeList[i].style.color = endangeredColor;
 		organismCountNodeList[i].style.color = endangeredColor;
 		redListNodeList[i].style.color = endangeredColor;
 		redListNodeList[i].textContent = 'Endangered';
 	} else if (populationCount < 200) {
 		speciesCountNodeList[i].style.color = vulnerableColor;
 		speciesNameNodeList[i].style.color = vulnerableColor;
-		// organismNameNodeList[i].style.color = vulnerableColor;
 		organismCountNodeList[i].style.color = vulnerableColor;
 		redListNodeList[i].style.color = vulnerableColor;
 		redListNodeList[i].textContent = 'Vulnerable';
 	} else {
 		speciesCountNodeList[i].style.color = healthyColor;
 		speciesNameNodeList[i].style.color = healthyColor;
-		// organismNameNodeList[i].style.color = healthyColor;
 		organismCountNodeList[i].style.color = healthyColor;
 		redListNodeList[i].style.color = healthyColor;
 		redListNodeList[i].textContent = 'Healthy';
@@ -814,13 +814,24 @@ function makeOrganismStatusShell() {
 	oldestGen.textContent = 'Oldest Generation: 6';
 	organismDiv.appendChild(oldestGen);
 	let aveSize = document.createElement('p');
-	aveSize.textContent = 'Average Adult Size: ';
+	aveSize.textContent = 'Ave Adult Size: ';
 	organismDiv.appendChild(aveSize);
 	let aveSpeed = document.createElement('p');
-	aveSpeed.textContent = 'Average Speed: ';
+	aveSpeed.textContent = 'Ave Speed: ';
 	organismDiv.appendChild(aveSpeed);
 	organismDiv.style.display = 'none';
 	organismStatus.appendChild(organismDiv);
+}
+
+function checkPopulation(counter, array) {
+	counter = 0;
+	array.forEach(function(e) {
+		if (e.dead !== true) {
+			counter++;
+		}
+	});
+
+	return counter;
 }
 
 init();
