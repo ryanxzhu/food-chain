@@ -18,6 +18,9 @@ let initialVelocity = 1;
 let greenaeAlive = 0;
 let yellowinAlive = 0;
 let orangetAlive = 0;
+let greenaeAveSize = 0;
+let yellowinAveSize = 0;
+let orangetAveSize = 0;
 
 var firstNameCount = 0;
 var lastNameCount = 0;
@@ -432,7 +435,7 @@ class Yellowin extends Heterotroph {
 	}
 
 	breed() {
-		if (yellowinAlive < greenaeAlive / 7) {
+		if (yellowinAlive * yellowinAveSize < greenaeAlive * greenaeAveSize * 0.5) {
 			yellowinArray.push(
 				new Yellowin(
 					this.x,
@@ -478,7 +481,7 @@ class Oranget extends Heterotroph {
 	}
 
 	breed() {
-		if (this.life > this.puberty && orangetAlive < yellowinAlive / 3) {
+		if (this.life > this.puberty && orangetAlive * orangetAveSize < yellowinAlive * yellowinAveSize) {
 			orangetArray.push(
 				new Oranget(
 					this.x,
@@ -651,11 +654,17 @@ function animate() {
 	// Check for headlines
 	checkForHeadlines();
 
-	greenaeAlive = checkPopulation(greenaeAlive, greenaeArray);
-	yellowinAlive = checkPopulation(yellowinAlive, yellowinArray);
-	orangetAlive = checkPopulation(orangetAlive, orangetArray);
+	greenaeAlive = checkPopulation(greenaeArray);
+	yellowinAlive = checkPopulation(yellowinArray);
+	orangetAlive = checkPopulation(orangetArray);
+	greenaeAveSize = checkAveSize(greenaeArray);
+	yellowinAveSize = checkAveSize(yellowinArray);
+	orangetAveSize = checkAveSize(orangetArray);
 
-	console.log(greenaeAlive, yellowinAlive, orangetAlive);
+	// console.log(yellowinAlive * yellowinAveSize, greenaeAlive * greenaeAveSize * 0.5);
+	// console.log(orangetAlive * orangetAveSize, yellowinAlive * yellowinAveSize * 0.3);
+
+	// console.log(greenaeAlive, yellowinAlive, orangetAlive);
 	/*************************************************** TO BE DELETED  *********************************************************/
 	// adjust sunlight
 	// let greenaePop = 0;
@@ -722,22 +731,19 @@ function makeStatusBoxShell() {
 
 function updatePopulation(array, i) {
 	let oldestGeneration = 0;
-	let populationCount = 0;
-	let totalSize = 0;
+	let populationCount = checkPopulation(array);
 	let totalVelocity = 0;
 	array.forEach(function(e) {
 		if (e.dead === false) {
-			populationCount++;
-			totalSize = totalSize + Math.PI * Math.pow(e.adultRadius, 2) / 100;
 			totalVelocity = totalVelocity + 10 * e.baseVelocity;
 		}
 		e.generation > oldestGeneration ? (oldestGeneration = e.generation) : oldestGeneration;
 	});
-
-	let averageSize = totalSize / populationCount;
-	averageSize = averageSize.toFixed(1);
 	let averageVelocity = totalVelocity / populationCount;
 	averageVelocity = averageVelocity.toFixed(1);
+
+	let averageSize = checkAveSize(array);
+	averageSize = averageSize.toFixed(1);
 
 	averageSize > 0
 		? (aveSizeNodeList[i].textContent = 'Ave Adult Size: ' + averageSize + 'kg')
@@ -822,8 +828,8 @@ function makeOrganismStatusShell() {
 	organismStatus.appendChild(organismDiv);
 }
 
-function checkPopulation(counter, array) {
-	counter = 0;
+function checkPopulation(array) {
+	let counter = 0;
 	array.forEach(function(e) {
 		if (e.dead !== true) {
 			counter++;
@@ -831,6 +837,19 @@ function checkPopulation(counter, array) {
 	});
 
 	return counter;
+}
+
+function checkAveSize(array) {
+	let totalSize = 0;
+	let counter = 0;
+	array.forEach(function(e) {
+		if (e.dead === false) {
+			totalSize = totalSize + Math.PI * Math.pow(e.adultRadius, 2) / 100;
+			counter++;
+		}
+	});
+
+	return totalSize / counter;
 }
 
 init();
