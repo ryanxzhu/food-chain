@@ -640,7 +640,7 @@ function animate() {
 				getDistance(yellowinArray[j].x, yellowinArray[j].y, orangetArray[i].x, orangetArray[i].y) <
 				yellowinArray[j].radius + orangetArray[i].radius
 			) {
-				orangetArray[i].energy = orangetArray[i].energy + yellowinArray[j].nutritionalValue * 2;
+				orangetArray[i].energy = orangetArray[i].energy + yellowinArray[j].nutritionalValue * 4;
 				yellowinArray.splice(j, 1);
 			}
 		}
