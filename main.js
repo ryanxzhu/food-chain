@@ -432,7 +432,7 @@ class Yellowin extends Heterotroph {
 	}
 
 	breed() {
-		if (yellowinAlive < greenaeAlive / 9) {
+		if (yellowinAlive < greenaeAlive / 7) {
 			yellowinArray.push(
 				new Yellowin(
 					this.x,
@@ -637,7 +637,7 @@ function animate() {
 				getDistance(yellowinArray[j].x, yellowinArray[j].y, orangetArray[i].x, orangetArray[i].y) <
 				yellowinArray[j].radius + orangetArray[i].radius
 			) {
-				orangetArray[i].energy = orangetArray[i].energy + yellowinArray[j].nutritionalValue * 4;
+				orangetArray[i].energy = orangetArray[i].energy + yellowinArray[j].nutritionalValue * 2;
 				yellowinArray.splice(j, 1);
 			}
 		}
