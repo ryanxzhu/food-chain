@@ -432,7 +432,7 @@ class Yellowin extends Heterotroph {
 	}
 
 	breed() {
-		if (yellowinAlive < greenaeAlive / 10) {
+		if (yellowinAlive < greenaeAlive / 9) {
 			yellowinArray.push(
 				new Yellowin(
 					this.x,
@@ -478,7 +478,7 @@ class Oranget extends Heterotroph {
 	}
 
 	breed() {
-		if (this.life > this.puberty && orangetAlive < yellowinAlive / 10) {
+		if (this.life > this.puberty && orangetAlive < yellowinAlive / 3) {
 			orangetArray.push(
 				new Oranget(
 					this.x,
@@ -600,7 +600,6 @@ function init() {
 //Animation loop
 function animate() {
 	requestAnimationFrame(animate);
-
 	// Refresh first name and last name array if the end of the array is reached
 	if (firstNameCount > firstNameArray.length - 1) {
 		firstNameCount = 0;
