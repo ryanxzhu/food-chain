@@ -52,7 +52,7 @@ for (let index = 0; index < speciesArray.length; index++) {
 }
 
 for (let index = 0; index < 7; index++) {
-	radiusArray.push(8 * Math.pow(2, index));
+	radiusArray.push(10 * Math.pow(2, index) * window.innerWidth / 1280);
 	Math.random() < 0.5 ? dietArray.push('carnivore') : dietArray.push('herbivore');
 	makeStatusBoxShell();
 	makeOrganismStatusShell();
@@ -402,7 +402,7 @@ class Greenae extends Organism {
 					initialVelocity / 2 * (1 + (Math.random() - 0.5)),
 					1,
 					this.lastName,
-					this.radius * 2 * (1 + (Math.random() - 0.5)),
+					this.radius * (1 + (Math.random() - 0.5)),
 					5000
 				)
 			);
@@ -463,7 +463,7 @@ class Yellowin extends Heterotroph {
 					Math.min(0.33, Math.random()) * initialVelocity,
 					1,
 					this.lastName,
-					this.adultRadius * 2,
+					this.adultRadius * 1.5,
 					10000
 				)
 			);
@@ -602,6 +602,8 @@ function init() {
 
 //Animation loop
 function animate() {
+	console.time('animate:');
+
 	requestAnimationFrame(animate);
 	// Refresh first name and last name array if the end of the array is reached
 	if (firstNameCount > firstNameArray.length - 1) {
@@ -661,29 +663,7 @@ function animate() {
 	yellowinAveSize = checkAveSize(yellowinArray);
 	orangetAveSize = checkAveSize(orangetArray);
 
-	// console.log(yellowinAlive * yellowinAveSize, greenaeAlive * greenaeAveSize * 0.5);
-	// console.log(orangetAlive * orangetAveSize, yellowinAlive * yellowinAveSize * 0.3);
-
-	// console.log(greenaeAlive, yellowinAlive, orangetAlive);
-	/*************************************************** TO BE DELETED  *********************************************************/
-	// adjust sunlight
-	// let greenaePop = 0;
-	// greenaeArray.forEach((e) => {
-	// 	if (e.dead !== true) {
-	// 		greenaePop++;
-	// 	}
-	// });
-	// if (greenaePop > 600) {
-	// 	sunlightFraction = 0.3;
-	// } else if (greenaePop < 550) {
-	// 	sunlightFraction = 2;
-	// } else {
-	// 	sunlightFraction = 0.8;
-	// }
-	// let valueInt = Math.floor(sunlightFraction * 50);
-	// canvas.style.backgroundColor = brownColorArray[valueInt];
-	/***************************************************************************************************************************/
-
+	console.time('update:');
 	// update each Organism and draw the next frame
 	for (let index = 0; index < speciesArray.length; index++) {
 		speciesArray[index].forEach((e) => e.update());
@@ -696,11 +676,13 @@ function animate() {
 			speciesArray[index].hasMutated = true;
 		}
 	}
-
+	console.timeEnd('update:');
 	let totalOrganisms = 0;
 	for (let index = 0; index < speciesArray.length; index++) {
 		totalOrganisms = totalOrganisms + speciesArray[index].length;
 	}
+
+	console.timeEnd('animate:');
 }
 
 function initialiseStatusInfo(array) {
